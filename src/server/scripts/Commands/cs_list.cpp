@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,12 +24,14 @@ EndScriptData */
 
 #include "ScriptMgr.h"
 #include "Chat.h"
-#include "SpellAuraEffects.h"
+#include "DatabaseEnv.h"
 #include "Language.h"
 #include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "Player.h"
-#include <iostream>
+#include "RBAC.h"
+#include "SpellAuraEffects.h"
+#include "WorldSession.h"
 
 class list_commandscript : public CommandScript
 {
@@ -45,6 +47,7 @@ public:
             { "object",   rbac::RBAC_PERM_COMMAND_LIST_OBJECT,   true, &HandleListObjectCommand,   "" },
             { "auras",    rbac::RBAC_PERM_COMMAND_LIST_AURAS,   false, &HandleListAurasCommand,    "" },
             { "mail",     rbac::RBAC_PERM_COMMAND_LIST_MAIL,     true, &HandleListMailCommand,     "" },
+            { "scenes",   rbac::RBAC_PERM_COMMAND_LIST_SCENES,  false, &HandleListScenesCommand,   "" },
         };
         static std::vector<ChatCommand> commandTable =
         {
@@ -574,6 +577,30 @@ public:
         }
         else
             handler->PSendSysMessage(LANG_LIST_MAIL_NOT_FOUND);
+        return true;
+    }
+
+    static bool HandleListScenesCommand(ChatHandler* handler, char const* /*args*/)
+    {
+        Player* target = handler->getSelectedPlayer();
+
+        if (!target)
+            target = handler->GetSession()->GetPlayer();
+
+        if (!target)
+        {
+            handler->SendSysMessage(LANG_PLAYER_NOT_FOUND);
+            handler->SetSentErrorMessage(true);
+            return false;
+        }
+
+        SceneTemplateByInstance const& instanceByPackageMap = target->GetSceneMgr().GetSceneTemplateByInstanceMap();
+
+        handler->PSendSysMessage(LANG_DEBUG_SCENE_OBJECT_LIST, target->GetSceneMgr().GetActiveSceneCount());
+
+        for (auto instanceByPackage : instanceByPackageMap)
+            handler->PSendSysMessage(LANG_DEBUG_SCENE_OBJECT_DETAIL, instanceByPackage.second->ScenePackageId, instanceByPackage.first);
+
         return true;
     }
 };

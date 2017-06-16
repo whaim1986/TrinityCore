@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,9 +16,35 @@
  */
 
 #include "DB2Meta.h"
+#include "Errors.h"
 
-DB2Meta::DB2Meta(int32 indexField, uint32 fieldCount, uint32 layoutHash, char const* types, uint8 const* arraySizes)
-    : IndexField(indexField), FieldCount(fieldCount), LayoutHash(layoutHash), Types(types), ArraySizes(arraySizes)
+DB2FieldDefault::DB2FieldDefault(uint8 u8)
+{
+    AsUInt8 = u8;
+}
+
+DB2FieldDefault::DB2FieldDefault(uint16 u16)
+{
+    AsUInt16 = u16;
+}
+
+DB2FieldDefault::DB2FieldDefault(uint32 u32)
+{
+    AsUInt32 = u32;
+}
+
+DB2FieldDefault::DB2FieldDefault(float f)
+{
+    AsFloat = f;
+}
+
+DB2FieldDefault::DB2FieldDefault(char const* str)
+{
+    AsString = str;
+}
+
+DB2Meta::DB2Meta(int32 indexField, uint32 fieldCount, uint32 layoutHash, char const* types, uint8 const* arraySizes, DB2FieldDefault const* fieldDefaults)
+    : IndexField(indexField), FieldCount(fieldCount), LayoutHash(layoutHash), Types(types), ArraySizes(arraySizes), FieldDefaults(fieldDefaults)
 {
 }
 
@@ -52,8 +78,10 @@ uint32 DB2Meta::GetRecordSize() const
                     size += 4;
                     break;
                 case FT_STRING:
-                case FT_STRING_NOT_LOCALIZED:
                     size += sizeof(char*);
+                    break;
+                default:
+                    ASSERT(false, "Unsupported column type specified %c", Types[i]);
                     break;
             }
         }
@@ -89,13 +117,7 @@ uint32 DB2Meta::GetDbFieldCount() const
     return fields;
 }
 
-uint32 DB2Meta::GetStringFieldCount(bool localizedOnly) const
+DB2FieldMeta::DB2FieldMeta(bool isSigned, DBCFormer type, char const* name)
+    : IsSigned(isSigned), Type(type), Name(name)
 {
-    uint32 stringFields = 0;
-    for (uint32 i = 0; i < FieldCount; ++i)
-        if (Types[i] == FT_STRING || (Types[i] == FT_STRING_NOT_LOCALIZED && !localizedOnly))
-            for (uint8 j = 0; j < ArraySizes[i]; ++j)
-                ++stringFields;
-
-    return stringFields;
 }

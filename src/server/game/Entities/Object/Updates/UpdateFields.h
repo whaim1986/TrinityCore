@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -19,7 +19,7 @@
 #ifndef _UPDATEFIELDS_H
 #define _UPDATEFIELDS_H
 
-// Auto generated for version 7, 0, 3, 22210
+// Auto generated for version 7, 2, 5, 24236
 
 enum ObjectFields
 {
@@ -55,9 +55,9 @@ enum ItemFields
     ITEM_FIELD_CREATE_PLAYED_TIME                          = OBJECT_END + 0x043, // Size: 1, Flags: PUBLIC
     ITEM_FIELD_MODIFIERS_MASK                              = OBJECT_END + 0x044, // Size: 1, Flags: OWNER
     ITEM_FIELD_CONTEXT                                     = OBJECT_END + 0x045, // Size: 1, Flags: PUBLIC
-    ITEM_FIELD_ARTIFACT_XP                                 = OBJECT_END + 0x046, // Size: 1, Flags: OWNER
-    ITEM_FIELD_APPEARANCE_MOD_ID                           = OBJECT_END + 0x047, // Size: 1, Flags: OWNER
-    ITEM_END                                               = OBJECT_END + 0x048,
+    ITEM_FIELD_ARTIFACT_XP                                 = OBJECT_END + 0x046, // Size: 2, Flags: OWNER
+    ITEM_FIELD_APPEARANCE_MOD_ID                           = OBJECT_END + 0x048, // Size: 1, Flags: OWNER
+    ITEM_END                                               = OBJECT_END + 0x049,
 };
 
 enum ItemDynamicFields
@@ -93,103 +93,103 @@ enum UnitFields
     UNIT_FIELD_TARGET                                      = OBJECT_END + 0x01C, // Size: 4, Flags: PUBLIC
     UNIT_FIELD_BATTLE_PET_COMPANION_GUID                   = OBJECT_END + 0x020, // Size: 4, Flags: PUBLIC
     UNIT_FIELD_BATTLE_PET_DB_ID                            = OBJECT_END + 0x024, // Size: 2, Flags: PUBLIC
-    UNIT_FIELD_CHANNEL_OBJECT                              = OBJECT_END + 0x026, // Size: 4, Flags: PUBLIC, URGENT
-    UNIT_CHANNEL_SPELL                                     = OBJECT_END + 0x02A, // Size: 1, Flags: PUBLIC, URGENT
-    UNIT_CHANNEL_SPELL_X_SPELL_VISUAL                      = OBJECT_END + 0x02B, // Size: 1, Flags: PUBLIC, URGENT
-    UNIT_FIELD_SUMMONED_BY_HOME_REALM                      = OBJECT_END + 0x02C, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_BYTES_0                                     = OBJECT_END + 0x02D, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_DISPLAY_POWER                               = OBJECT_END + 0x02E, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_OVERRIDE_DISPLAY_POWER_ID                   = OBJECT_END + 0x02F, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_HEALTH                                      = OBJECT_END + 0x030, // Size: 2, Flags: PUBLIC
-    UNIT_FIELD_POWER                                       = OBJECT_END + 0x032, // Size: 6, Flags: PUBLIC, URGENT_SELF_ONLY
-    UNIT_FIELD_MAXHEALTH                                   = OBJECT_END + 0x038, // Size: 2, Flags: PUBLIC
-    UNIT_FIELD_MAXPOWER                                    = OBJECT_END + 0x03A, // Size: 6, Flags: PUBLIC
-    UNIT_FIELD_POWER_REGEN_FLAT_MODIFIER                   = OBJECT_END + 0x040, // Size: 6, Flags: PRIVATE, OWNER, UNIT_ALL
-    UNIT_FIELD_POWER_REGEN_INTERRUPTED_FLAT_MODIFIER       = OBJECT_END + 0x046, // Size: 6, Flags: PRIVATE, OWNER, UNIT_ALL
-    UNIT_FIELD_LEVEL                                       = OBJECT_END + 0x04C, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_EFFECTIVE_LEVEL                             = OBJECT_END + 0x04D, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_SCALING_LEVEL_MIN                           = OBJECT_END + 0x04E, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_SCALING_LEVEL_MAX                           = OBJECT_END + 0x04F, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_SCALING_LEVEL_DELTA                         = OBJECT_END + 0x050, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_FACTIONTEMPLATE                             = OBJECT_END + 0x051, // Size: 1, Flags: PUBLIC
-    UNIT_VIRTUAL_ITEM_SLOT_ID                              = OBJECT_END + 0x052, // Size: 6, Flags: PUBLIC
-    UNIT_FIELD_FLAGS                                       = OBJECT_END + 0x058, // Size: 1, Flags: PUBLIC, URGENT
-    UNIT_FIELD_FLAGS_2                                     = OBJECT_END + 0x059, // Size: 1, Flags: PUBLIC, URGENT
-    UNIT_FIELD_FLAGS_3                                     = OBJECT_END + 0x05A, // Size: 1, Flags: PUBLIC, URGENT
-    UNIT_FIELD_AURASTATE                                   = OBJECT_END + 0x05B, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_BASEATTACKTIME                              = OBJECT_END + 0x05C, // Size: 2, Flags: PUBLIC
-    UNIT_FIELD_RANGEDATTACKTIME                            = OBJECT_END + 0x05E, // Size: 1, Flags: PRIVATE
-    UNIT_FIELD_BOUNDINGRADIUS                              = OBJECT_END + 0x05F, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_COMBATREACH                                 = OBJECT_END + 0x060, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_DISPLAYID                                   = OBJECT_END + 0x061, // Size: 1, Flags: DYNAMIC, URGENT
-    UNIT_FIELD_NATIVEDISPLAYID                             = OBJECT_END + 0x062, // Size: 1, Flags: PUBLIC, URGENT
-    UNIT_FIELD_MOUNTDISPLAYID                              = OBJECT_END + 0x063, // Size: 1, Flags: PUBLIC, URGENT
-    UNIT_FIELD_MINDAMAGE                                   = OBJECT_END + 0x064, // Size: 1, Flags: PRIVATE, OWNER, SPECIAL_INFO
-    UNIT_FIELD_MAXDAMAGE                                   = OBJECT_END + 0x065, // Size: 1, Flags: PRIVATE, OWNER, SPECIAL_INFO
-    UNIT_FIELD_MINOFFHANDDAMAGE                            = OBJECT_END + 0x066, // Size: 1, Flags: PRIVATE, OWNER, SPECIAL_INFO
-    UNIT_FIELD_MAXOFFHANDDAMAGE                            = OBJECT_END + 0x067, // Size: 1, Flags: PRIVATE, OWNER, SPECIAL_INFO
-    UNIT_FIELD_BYTES_1                                     = OBJECT_END + 0x068, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_PETNUMBER                                   = OBJECT_END + 0x069, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_PET_NAME_TIMESTAMP                          = OBJECT_END + 0x06A, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_PETEXPERIENCE                               = OBJECT_END + 0x06B, // Size: 1, Flags: OWNER
-    UNIT_FIELD_PETNEXTLEVELEXP                             = OBJECT_END + 0x06C, // Size: 1, Flags: OWNER
-    UNIT_MOD_CAST_SPEED                                    = OBJECT_END + 0x06D, // Size: 1, Flags: PUBLIC
-    UNIT_MOD_CAST_HASTE                                    = OBJECT_END + 0x06E, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_MOD_HASTE                                   = OBJECT_END + 0x06F, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_MOD_RANGED_HASTE                            = OBJECT_END + 0x070, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_MOD_HASTE_REGEN                             = OBJECT_END + 0x071, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_MOD_TIME_RATE                               = OBJECT_END + 0x072, // Size: 1, Flags: PUBLIC
-    UNIT_CREATED_BY_SPELL                                  = OBJECT_END + 0x073, // Size: 1, Flags: PUBLIC
-    UNIT_NPC_FLAGS                                         = OBJECT_END + 0x074, // Size: 2, Flags: PUBLIC, DYNAMIC
-    UNIT_NPC_EMOTESTATE                                    = OBJECT_END + 0x076, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_STAT                                        = OBJECT_END + 0x077, // Size: 4, Flags: PRIVATE, OWNER
-    UNIT_FIELD_POSSTAT                                     = OBJECT_END + 0x07B, // Size: 4, Flags: PRIVATE, OWNER
-    UNIT_FIELD_NEGSTAT                                     = OBJECT_END + 0x07F, // Size: 4, Flags: PRIVATE, OWNER
-    UNIT_FIELD_RESISTANCES                                 = OBJECT_END + 0x083, // Size: 7, Flags: PRIVATE, OWNER, SPECIAL_INFO
-    UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE                  = OBJECT_END + 0x08A, // Size: 7, Flags: PRIVATE, OWNER
-    UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE                  = OBJECT_END + 0x091, // Size: 7, Flags: PRIVATE, OWNER
-    UNIT_FIELD_MOD_BONUS_ARMOR                             = OBJECT_END + 0x098, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_BASE_MANA                                   = OBJECT_END + 0x099, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_BASE_HEALTH                                 = OBJECT_END + 0x09A, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_BYTES_2                                     = OBJECT_END + 0x09B, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_ATTACK_POWER                                = OBJECT_END + 0x09C, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_ATTACK_POWER_MOD_POS                        = OBJECT_END + 0x09D, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_ATTACK_POWER_MOD_NEG                        = OBJECT_END + 0x09E, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_ATTACK_POWER_MULTIPLIER                     = OBJECT_END + 0x09F, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_RANGED_ATTACK_POWER                         = OBJECT_END + 0x0A0, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_RANGED_ATTACK_POWER_MOD_POS                 = OBJECT_END + 0x0A1, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_RANGED_ATTACK_POWER_MOD_NEG                 = OBJECT_END + 0x0A2, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_RANGED_ATTACK_POWER_MULTIPLIER              = OBJECT_END + 0x0A3, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_ATTACK_SPEED_AURA                           = OBJECT_END + 0x0A4, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_MINRANGEDDAMAGE                             = OBJECT_END + 0x0A5, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_MAXRANGEDDAMAGE                             = OBJECT_END + 0x0A6, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_POWER_COST_MODIFIER                         = OBJECT_END + 0x0A7, // Size: 7, Flags: PRIVATE, OWNER
-    UNIT_FIELD_POWER_COST_MULTIPLIER                       = OBJECT_END + 0x0AE, // Size: 7, Flags: PRIVATE, OWNER
-    UNIT_FIELD_MAXHEALTHMODIFIER                           = OBJECT_END + 0x0B5, // Size: 1, Flags: PRIVATE, OWNER
-    UNIT_FIELD_HOVERHEIGHT                                 = OBJECT_END + 0x0B6, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_MIN_ITEM_LEVEL_CUTOFF                       = OBJECT_END + 0x0B7, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_MIN_ITEM_LEVEL                              = OBJECT_END + 0x0B8, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_MAXITEMLEVEL                                = OBJECT_END + 0x0B9, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_WILD_BATTLEPET_LEVEL                        = OBJECT_END + 0x0BA, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_BATTLEPET_COMPANION_NAME_TIMESTAMP          = OBJECT_END + 0x0BB, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_INTERACT_SPELLID                            = OBJECT_END + 0x0BC, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_STATE_SPELL_VISUAL_ID                       = OBJECT_END + 0x0BD, // Size: 1, Flags: DYNAMIC, URGENT
-    UNIT_FIELD_STATE_ANIM_ID                               = OBJECT_END + 0x0BE, // Size: 1, Flags: DYNAMIC, URGENT
-    UNIT_FIELD_STATE_ANIM_KIT_ID                           = OBJECT_END + 0x0BF, // Size: 1, Flags: DYNAMIC, URGENT
-    UNIT_FIELD_STATE_WORLD_EFFECT_ID                       = OBJECT_END + 0x0C0, // Size: 4, Flags: DYNAMIC, URGENT
-    UNIT_FIELD_SCALE_DURATION                              = OBJECT_END + 0x0C4, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_LOOKS_LIKE_MOUNT_ID                         = OBJECT_END + 0x0C5, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_LOOKS_LIKE_CREATURE_ID                      = OBJECT_END + 0x0C6, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_LOOK_AT_CONTROLLER_ID                       = OBJECT_END + 0x0C7, // Size: 1, Flags: PUBLIC
-    UNIT_FIELD_LOOK_AT_CONTROLLER_TARGET                   = OBJECT_END + 0x0C8, // Size: 4, Flags: PUBLIC
-    UNIT_END                                               = OBJECT_END + 0x0CC,
+    UNIT_CHANNEL_SPELL                                     = OBJECT_END + 0x026, // Size: 1, Flags: PUBLIC, URGENT
+    UNIT_CHANNEL_SPELL_X_SPELL_VISUAL                      = OBJECT_END + 0x027, // Size: 1, Flags: PUBLIC, URGENT
+    UNIT_FIELD_SUMMONED_BY_HOME_REALM                      = OBJECT_END + 0x028, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_BYTES_0                                     = OBJECT_END + 0x029, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_DISPLAY_POWER                               = OBJECT_END + 0x02A, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_OVERRIDE_DISPLAY_POWER_ID                   = OBJECT_END + 0x02B, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_HEALTH                                      = OBJECT_END + 0x02C, // Size: 2, Flags: PUBLIC
+    UNIT_FIELD_POWER                                       = OBJECT_END + 0x02E, // Size: 6, Flags: PUBLIC, URGENT_SELF_ONLY
+    UNIT_FIELD_MAXHEALTH                                   = OBJECT_END + 0x034, // Size: 2, Flags: PUBLIC
+    UNIT_FIELD_MAXPOWER                                    = OBJECT_END + 0x036, // Size: 6, Flags: PUBLIC
+    UNIT_FIELD_POWER_REGEN_FLAT_MODIFIER                   = OBJECT_END + 0x03C, // Size: 6, Flags: PRIVATE, OWNER, UNIT_ALL
+    UNIT_FIELD_POWER_REGEN_INTERRUPTED_FLAT_MODIFIER       = OBJECT_END + 0x042, // Size: 6, Flags: PRIVATE, OWNER, UNIT_ALL
+    UNIT_FIELD_LEVEL                                       = OBJECT_END + 0x048, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_EFFECTIVE_LEVEL                             = OBJECT_END + 0x049, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_SCALING_LEVEL_MIN                           = OBJECT_END + 0x04A, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_SCALING_LEVEL_MAX                           = OBJECT_END + 0x04B, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_SCALING_LEVEL_DELTA                         = OBJECT_END + 0x04C, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_FACTIONTEMPLATE                             = OBJECT_END + 0x04D, // Size: 1, Flags: PUBLIC
+    UNIT_VIRTUAL_ITEM_SLOT_ID                              = OBJECT_END + 0x04E, // Size: 6, Flags: PUBLIC
+    UNIT_FIELD_FLAGS                                       = OBJECT_END + 0x054, // Size: 1, Flags: PUBLIC, URGENT
+    UNIT_FIELD_FLAGS_2                                     = OBJECT_END + 0x055, // Size: 1, Flags: PUBLIC, URGENT
+    UNIT_FIELD_FLAGS_3                                     = OBJECT_END + 0x056, // Size: 1, Flags: PUBLIC, URGENT
+    UNIT_FIELD_AURASTATE                                   = OBJECT_END + 0x057, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_BASEATTACKTIME                              = OBJECT_END + 0x058, // Size: 2, Flags: PUBLIC
+    UNIT_FIELD_RANGEDATTACKTIME                            = OBJECT_END + 0x05A, // Size: 1, Flags: PRIVATE
+    UNIT_FIELD_BOUNDINGRADIUS                              = OBJECT_END + 0x05B, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_COMBATREACH                                 = OBJECT_END + 0x05C, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_DISPLAYID                                   = OBJECT_END + 0x05D, // Size: 1, Flags: DYNAMIC, URGENT
+    UNIT_FIELD_NATIVEDISPLAYID                             = OBJECT_END + 0x05E, // Size: 1, Flags: PUBLIC, URGENT
+    UNIT_FIELD_MOUNTDISPLAYID                              = OBJECT_END + 0x05F, // Size: 1, Flags: PUBLIC, URGENT
+    UNIT_FIELD_MINDAMAGE                                   = OBJECT_END + 0x060, // Size: 1, Flags: PRIVATE, OWNER, SPECIAL_INFO
+    UNIT_FIELD_MAXDAMAGE                                   = OBJECT_END + 0x061, // Size: 1, Flags: PRIVATE, OWNER, SPECIAL_INFO
+    UNIT_FIELD_MINOFFHANDDAMAGE                            = OBJECT_END + 0x062, // Size: 1, Flags: PRIVATE, OWNER, SPECIAL_INFO
+    UNIT_FIELD_MAXOFFHANDDAMAGE                            = OBJECT_END + 0x063, // Size: 1, Flags: PRIVATE, OWNER, SPECIAL_INFO
+    UNIT_FIELD_BYTES_1                                     = OBJECT_END + 0x064, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_PETNUMBER                                   = OBJECT_END + 0x065, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_PET_NAME_TIMESTAMP                          = OBJECT_END + 0x066, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_PETEXPERIENCE                               = OBJECT_END + 0x067, // Size: 1, Flags: OWNER
+    UNIT_FIELD_PETNEXTLEVELEXP                             = OBJECT_END + 0x068, // Size: 1, Flags: OWNER
+    UNIT_MOD_CAST_SPEED                                    = OBJECT_END + 0x069, // Size: 1, Flags: PUBLIC
+    UNIT_MOD_CAST_HASTE                                    = OBJECT_END + 0x06A, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_MOD_HASTE                                   = OBJECT_END + 0x06B, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_MOD_RANGED_HASTE                            = OBJECT_END + 0x06C, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_MOD_HASTE_REGEN                             = OBJECT_END + 0x06D, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_MOD_TIME_RATE                               = OBJECT_END + 0x06E, // Size: 1, Flags: PUBLIC
+    UNIT_CREATED_BY_SPELL                                  = OBJECT_END + 0x06F, // Size: 1, Flags: PUBLIC
+    UNIT_NPC_FLAGS                                         = OBJECT_END + 0x070, // Size: 2, Flags: PUBLIC, DYNAMIC
+    UNIT_NPC_EMOTESTATE                                    = OBJECT_END + 0x072, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_STAT                                        = OBJECT_END + 0x073, // Size: 4, Flags: PRIVATE, OWNER
+    UNIT_FIELD_POSSTAT                                     = OBJECT_END + 0x077, // Size: 4, Flags: PRIVATE, OWNER
+    UNIT_FIELD_NEGSTAT                                     = OBJECT_END + 0x07B, // Size: 4, Flags: PRIVATE, OWNER
+    UNIT_FIELD_RESISTANCES                                 = OBJECT_END + 0x07F, // Size: 7, Flags: PRIVATE, OWNER, SPECIAL_INFO
+    UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE                  = OBJECT_END + 0x086, // Size: 7, Flags: PRIVATE, OWNER
+    UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE                  = OBJECT_END + 0x08D, // Size: 7, Flags: PRIVATE, OWNER
+    UNIT_FIELD_MOD_BONUS_ARMOR                             = OBJECT_END + 0x094, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_BASE_MANA                                   = OBJECT_END + 0x095, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_BASE_HEALTH                                 = OBJECT_END + 0x096, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_BYTES_2                                     = OBJECT_END + 0x097, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_ATTACK_POWER                                = OBJECT_END + 0x098, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_ATTACK_POWER_MOD_POS                        = OBJECT_END + 0x099, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_ATTACK_POWER_MOD_NEG                        = OBJECT_END + 0x09A, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_ATTACK_POWER_MULTIPLIER                     = OBJECT_END + 0x09B, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_RANGED_ATTACK_POWER                         = OBJECT_END + 0x09C, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_RANGED_ATTACK_POWER_MOD_POS                 = OBJECT_END + 0x09D, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_RANGED_ATTACK_POWER_MOD_NEG                 = OBJECT_END + 0x09E, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_RANGED_ATTACK_POWER_MULTIPLIER              = OBJECT_END + 0x09F, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_ATTACK_SPEED_AURA                           = OBJECT_END + 0x0A0, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_MINRANGEDDAMAGE                             = OBJECT_END + 0x0A1, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_MAXRANGEDDAMAGE                             = OBJECT_END + 0x0A2, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_POWER_COST_MODIFIER                         = OBJECT_END + 0x0A3, // Size: 7, Flags: PRIVATE, OWNER
+    UNIT_FIELD_POWER_COST_MULTIPLIER                       = OBJECT_END + 0x0AA, // Size: 7, Flags: PRIVATE, OWNER
+    UNIT_FIELD_MAXHEALTHMODIFIER                           = OBJECT_END + 0x0B1, // Size: 1, Flags: PRIVATE, OWNER
+    UNIT_FIELD_HOVERHEIGHT                                 = OBJECT_END + 0x0B2, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_MIN_ITEM_LEVEL_CUTOFF                       = OBJECT_END + 0x0B3, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_MIN_ITEM_LEVEL                              = OBJECT_END + 0x0B4, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_MAXITEMLEVEL                                = OBJECT_END + 0x0B5, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_WILD_BATTLEPET_LEVEL                        = OBJECT_END + 0x0B6, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_BATTLEPET_COMPANION_NAME_TIMESTAMP          = OBJECT_END + 0x0B7, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_INTERACT_SPELLID                            = OBJECT_END + 0x0B8, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_STATE_SPELL_VISUAL_ID                       = OBJECT_END + 0x0B9, // Size: 1, Flags: DYNAMIC, URGENT
+    UNIT_FIELD_STATE_ANIM_ID                               = OBJECT_END + 0x0BA, // Size: 1, Flags: DYNAMIC, URGENT
+    UNIT_FIELD_STATE_ANIM_KIT_ID                           = OBJECT_END + 0x0BB, // Size: 1, Flags: DYNAMIC, URGENT
+    UNIT_FIELD_STATE_WORLD_EFFECT_ID                       = OBJECT_END + 0x0BC, // Size: 4, Flags: DYNAMIC, URGENT
+    UNIT_FIELD_SCALE_DURATION                              = OBJECT_END + 0x0C0, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_LOOKS_LIKE_MOUNT_ID                         = OBJECT_END + 0x0C1, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_LOOKS_LIKE_CREATURE_ID                      = OBJECT_END + 0x0C2, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_LOOK_AT_CONTROLLER_ID                       = OBJECT_END + 0x0C3, // Size: 1, Flags: PUBLIC
+    UNIT_FIELD_LOOK_AT_CONTROLLER_TARGET                   = OBJECT_END + 0x0C4, // Size: 4, Flags: PUBLIC
+    UNIT_END                                               = OBJECT_END + 0x0C8,
 };
 
 enum UnitDynamicFields
 {
     UNIT_DYNAMIC_FIELD_PASSIVE_SPELLS                      = OBJECT_DYNAMIC_END + 0x000, // Flags: PUBLIC, URGENT
     UNIT_DYNAMIC_FIELD_WORLD_EFFECTS                       = OBJECT_DYNAMIC_END + 0x001, // Flags: PUBLIC, URGENT
-    UNIT_DYNAMIC_END                                       = OBJECT_DYNAMIC_END + 0x002,
+    UNIT_DYNAMIC_FIELD_CHANNEL_OBJECTS                     = OBJECT_DYNAMIC_END + 0x002, // Flags: PUBLIC, URGENT
+    UNIT_DYNAMIC_END                                       = OBJECT_DYNAMIC_END + 0x003,
 };
 
 enum PlayerFields
@@ -238,72 +238,75 @@ enum PlayerFields
     PLAYER_FIELD_COMBAT_RATING_EXPERTISE                   = UNIT_END + 0x834, // Size: 1, Flags: PRIVATE
     PLAYER_BLOCK_PERCENTAGE                                = UNIT_END + 0x835, // Size: 1, Flags: PRIVATE
     PLAYER_DODGE_PERCENTAGE                                = UNIT_END + 0x836, // Size: 1, Flags: PRIVATE
-    PLAYER_PARRY_PERCENTAGE                                = UNIT_END + 0x837, // Size: 1, Flags: PRIVATE
-    PLAYER_CRIT_PERCENTAGE                                 = UNIT_END + 0x838, // Size: 1, Flags: PRIVATE
-    PLAYER_RANGED_CRIT_PERCENTAGE                          = UNIT_END + 0x839, // Size: 1, Flags: PRIVATE
-    PLAYER_OFFHAND_CRIT_PERCENTAGE                         = UNIT_END + 0x83A, // Size: 1, Flags: PRIVATE
-    PLAYER_SPELL_CRIT_PERCENTAGE1                          = UNIT_END + 0x83B, // Size: 1, Flags: PRIVATE
-    PLAYER_SHIELD_BLOCK                                    = UNIT_END + 0x83C, // Size: 1, Flags: PRIVATE
-    PLAYER_SHIELD_BLOCK_CRIT_PERCENTAGE                    = UNIT_END + 0x83D, // Size: 1, Flags: PRIVATE
-    PLAYER_MASTERY                                         = UNIT_END + 0x83E, // Size: 1, Flags: PRIVATE
-    PLAYER_SPEED                                           = UNIT_END + 0x83F, // Size: 1, Flags: PRIVATE
-    PLAYER_LIFESTEAL                                       = UNIT_END + 0x840, // Size: 1, Flags: PRIVATE
-    PLAYER_AVOIDANCE                                       = UNIT_END + 0x841, // Size: 1, Flags: PRIVATE
-    PLAYER_STURDINESS                                      = UNIT_END + 0x842, // Size: 1, Flags: PRIVATE
-    PLAYER_VERSATILITY                                     = UNIT_END + 0x843, // Size: 1, Flags: PRIVATE
-    PLAYER_VERSATILITY_BONUS                               = UNIT_END + 0x844, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_PVP_POWER_DAMAGE                          = UNIT_END + 0x845, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_PVP_POWER_HEALING                         = UNIT_END + 0x846, // Size: 1, Flags: PRIVATE
-    PLAYER_EXPLORED_ZONES_1                                = UNIT_END + 0x847, // Size: 256, Flags: PRIVATE
-    PLAYER_FIELD_REST_INFO                                 = UNIT_END + 0x947, // Size: 4, Flags: PRIVATE
-    PLAYER_FIELD_MOD_DAMAGE_DONE_POS                       = UNIT_END + 0x94B, // Size: 7, Flags: PRIVATE
-    PLAYER_FIELD_MOD_DAMAGE_DONE_NEG                       = UNIT_END + 0x952, // Size: 7, Flags: PRIVATE
-    PLAYER_FIELD_MOD_DAMAGE_DONE_PCT                       = UNIT_END + 0x959, // Size: 7, Flags: PRIVATE
-    PLAYER_FIELD_MOD_HEALING_DONE_POS                      = UNIT_END + 0x960, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_MOD_HEALING_PCT                           = UNIT_END + 0x961, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_MOD_HEALING_DONE_PCT                      = UNIT_END + 0x962, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_MOD_PERIODIC_HEALING_DONE_PERCENT         = UNIT_END + 0x963, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_WEAPON_DMG_MULTIPLIERS                    = UNIT_END + 0x964, // Size: 3, Flags: PRIVATE
-    PLAYER_FIELD_WEAPON_ATK_SPEED_MULTIPLIERS              = UNIT_END + 0x967, // Size: 3, Flags: PRIVATE
-    PLAYER_FIELD_MOD_SPELL_POWER_PCT                       = UNIT_END + 0x96A, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_MOD_RESILIENCE_PERCENT                    = UNIT_END + 0x96B, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_OVERRIDE_SPELL_POWER_BY_AP_PCT            = UNIT_END + 0x96C, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_OVERRIDE_AP_BY_SPELL_POWER_PERCENT        = UNIT_END + 0x96D, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_MOD_TARGET_RESISTANCE                     = UNIT_END + 0x96E, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_MOD_TARGET_PHYSICAL_RESISTANCE            = UNIT_END + 0x96F, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_LOCAL_FLAGS                               = UNIT_END + 0x970, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_BYTES                                     = UNIT_END + 0x971, // Size: 1, Flags: PRIVATE
-    PLAYER_SELF_RES_SPELL                                  = UNIT_END + 0x972, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_PVP_MEDALS                                = UNIT_END + 0x973, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_BUYBACK_PRICE_1                           = UNIT_END + 0x974, // Size: 12, Flags: PRIVATE
-    PLAYER_FIELD_BUYBACK_TIMESTAMP_1                       = UNIT_END + 0x980, // Size: 12, Flags: PRIVATE
-    PLAYER_FIELD_KILLS                                     = UNIT_END + 0x98C, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_LIFETIME_HONORABLE_KILLS                  = UNIT_END + 0x98D, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_WATCHED_FACTION_INDEX                     = UNIT_END + 0x98E, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_COMBAT_RATING_1                           = UNIT_END + 0x98F, // Size: 32, Flags: PRIVATE
-    PLAYER_FIELD_ARENA_TEAM_INFO_1_1                       = UNIT_END + 0x9AF, // Size: 36, Flags: PRIVATE
-    PLAYER_FIELD_MAX_LEVEL                                 = UNIT_END + 0x9D3, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_SCALING_PLAYER_LEVEL_DELTA                = UNIT_END + 0x9D4, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_MAX_CREATURE_SCALING_LEVEL                = UNIT_END + 0x9D5, // Size: 1, Flags: PRIVATE
-    PLAYER_NO_REAGENT_COST_1                               = UNIT_END + 0x9D6, // Size: 4, Flags: PRIVATE
-    PLAYER_PET_SPELL_POWER                                 = UNIT_END + 0x9DA, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_RESEARCHING_1                             = UNIT_END + 0x9DB, // Size: 10, Flags: PRIVATE
-    PLAYER_PROFESSION_SKILL_LINE_1                         = UNIT_END + 0x9E5, // Size: 2, Flags: PRIVATE
-    PLAYER_FIELD_UI_HIT_MODIFIER                           = UNIT_END + 0x9E7, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_UI_SPELL_HIT_MODIFIER                     = UNIT_END + 0x9E8, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_HOME_REALM_TIME_OFFSET                    = UNIT_END + 0x9E9, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_MOD_PET_HASTE                             = UNIT_END + 0x9EA, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_BYTES2                                    = UNIT_END + 0x9EB, // Size: 1, Flags: PRIVATE, URGENT_SELF_ONLY
-    PLAYER_FIELD_LFG_BONUS_FACTION_ID                      = UNIT_END + 0x9EC, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_LOOT_SPEC_ID                              = UNIT_END + 0x9ED, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_OVERRIDE_ZONE_PVP_TYPE                    = UNIT_END + 0x9EE, // Size: 1, Flags: PRIVATE, URGENT_SELF_ONLY
-    PLAYER_FIELD_BAG_SLOT_FLAGS                            = UNIT_END + 0x9EF, // Size: 4, Flags: PRIVATE
-    PLAYER_FIELD_BANK_BAG_SLOT_FLAGS                       = UNIT_END + 0x9F3, // Size: 7, Flags: PRIVATE
-    PLAYER_FIELD_INSERT_ITEMS_LEFT_TO_RIGHT                = UNIT_END + 0x9FA, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_QUEST_COMPLETED                           = UNIT_END + 0x9FB, // Size: 875, Flags: PRIVATE
-    PLAYER_FIELD_HONOR                                     = UNIT_END + 0xD66, // Size: 1, Flags: PRIVATE
-    PLAYER_FIELD_HONOR_NEXT_LEVEL                          = UNIT_END + 0xD67, // Size: 1, Flags: PRIVATE
-    PLAYER_END                                             = UNIT_END + 0xD68,
+    PLAYER_DODGE_PERCENTAGE_FROM_ATTRIBUTE                 = UNIT_END + 0x837, // Size: 1, Flags: PRIVATE
+    PLAYER_PARRY_PERCENTAGE                                = UNIT_END + 0x838, // Size: 1, Flags: PRIVATE
+    PLAYER_PARRY_PERCENTAGE_FROM_ATTRIBUTE                 = UNIT_END + 0x839, // Size: 1, Flags: PRIVATE
+    PLAYER_CRIT_PERCENTAGE                                 = UNIT_END + 0x83A, // Size: 1, Flags: PRIVATE
+    PLAYER_RANGED_CRIT_PERCENTAGE                          = UNIT_END + 0x83B, // Size: 1, Flags: PRIVATE
+    PLAYER_OFFHAND_CRIT_PERCENTAGE                         = UNIT_END + 0x83C, // Size: 1, Flags: PRIVATE
+    PLAYER_SPELL_CRIT_PERCENTAGE1                          = UNIT_END + 0x83D, // Size: 1, Flags: PRIVATE
+    PLAYER_SHIELD_BLOCK                                    = UNIT_END + 0x83E, // Size: 1, Flags: PRIVATE
+    PLAYER_SHIELD_BLOCK_CRIT_PERCENTAGE                    = UNIT_END + 0x83F, // Size: 1, Flags: PRIVATE
+    PLAYER_MASTERY                                         = UNIT_END + 0x840, // Size: 1, Flags: PRIVATE
+    PLAYER_SPEED                                           = UNIT_END + 0x841, // Size: 1, Flags: PRIVATE
+    PLAYER_LIFESTEAL                                       = UNIT_END + 0x842, // Size: 1, Flags: PRIVATE
+    PLAYER_AVOIDANCE                                       = UNIT_END + 0x843, // Size: 1, Flags: PRIVATE
+    PLAYER_STURDINESS                                      = UNIT_END + 0x844, // Size: 1, Flags: PRIVATE
+    PLAYER_VERSATILITY                                     = UNIT_END + 0x845, // Size: 1, Flags: PRIVATE
+    PLAYER_VERSATILITY_BONUS                               = UNIT_END + 0x846, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_PVP_POWER_DAMAGE                          = UNIT_END + 0x847, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_PVP_POWER_HEALING                         = UNIT_END + 0x848, // Size: 1, Flags: PRIVATE
+    PLAYER_EXPLORED_ZONES_1                                = UNIT_END + 0x849, // Size: 256, Flags: PRIVATE
+    PLAYER_FIELD_REST_INFO                                 = UNIT_END + 0x949, // Size: 4, Flags: PRIVATE
+    PLAYER_FIELD_MOD_DAMAGE_DONE_POS                       = UNIT_END + 0x94D, // Size: 7, Flags: PRIVATE
+    PLAYER_FIELD_MOD_DAMAGE_DONE_NEG                       = UNIT_END + 0x954, // Size: 7, Flags: PRIVATE
+    PLAYER_FIELD_MOD_DAMAGE_DONE_PCT                       = UNIT_END + 0x95B, // Size: 7, Flags: PRIVATE
+    PLAYER_FIELD_MOD_HEALING_DONE_POS                      = UNIT_END + 0x962, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_MOD_HEALING_PCT                           = UNIT_END + 0x963, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_MOD_HEALING_DONE_PCT                      = UNIT_END + 0x964, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_MOD_PERIODIC_HEALING_DONE_PERCENT         = UNIT_END + 0x965, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_WEAPON_DMG_MULTIPLIERS                    = UNIT_END + 0x966, // Size: 3, Flags: PRIVATE
+    PLAYER_FIELD_WEAPON_ATK_SPEED_MULTIPLIERS              = UNIT_END + 0x969, // Size: 3, Flags: PRIVATE
+    PLAYER_FIELD_MOD_SPELL_POWER_PCT                       = UNIT_END + 0x96C, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_MOD_RESILIENCE_PERCENT                    = UNIT_END + 0x96D, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_OVERRIDE_SPELL_POWER_BY_AP_PCT            = UNIT_END + 0x96E, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_OVERRIDE_AP_BY_SPELL_POWER_PERCENT        = UNIT_END + 0x96F, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_MOD_TARGET_RESISTANCE                     = UNIT_END + 0x970, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_MOD_TARGET_PHYSICAL_RESISTANCE            = UNIT_END + 0x971, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_LOCAL_FLAGS                               = UNIT_END + 0x972, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_BYTES                                     = UNIT_END + 0x973, // Size: 1, Flags: PRIVATE
+    PLAYER_SELF_RES_SPELL                                  = UNIT_END + 0x974, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_PVP_MEDALS                                = UNIT_END + 0x975, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_BUYBACK_PRICE_1                           = UNIT_END + 0x976, // Size: 12, Flags: PRIVATE
+    PLAYER_FIELD_BUYBACK_TIMESTAMP_1                       = UNIT_END + 0x982, // Size: 12, Flags: PRIVATE
+    PLAYER_FIELD_KILLS                                     = UNIT_END + 0x98E, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_LIFETIME_HONORABLE_KILLS                  = UNIT_END + 0x98F, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_WATCHED_FACTION_INDEX                     = UNIT_END + 0x990, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_COMBAT_RATING_1                           = UNIT_END + 0x991, // Size: 32, Flags: PRIVATE
+    PLAYER_FIELD_ARENA_TEAM_INFO_1_1                       = UNIT_END + 0x9B1, // Size: 42, Flags: PRIVATE
+    PLAYER_FIELD_MAX_LEVEL                                 = UNIT_END + 0x9DB, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_SCALING_PLAYER_LEVEL_DELTA                = UNIT_END + 0x9DC, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_MAX_CREATURE_SCALING_LEVEL                = UNIT_END + 0x9DD, // Size: 1, Flags: PRIVATE
+    PLAYER_NO_REAGENT_COST_1                               = UNIT_END + 0x9DE, // Size: 4, Flags: PRIVATE
+    PLAYER_PET_SPELL_POWER                                 = UNIT_END + 0x9E2, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_RESEARCHING_1                             = UNIT_END + 0x9E3, // Size: 10, Flags: PRIVATE
+    PLAYER_PROFESSION_SKILL_LINE_1                         = UNIT_END + 0x9ED, // Size: 2, Flags: PRIVATE
+    PLAYER_FIELD_UI_HIT_MODIFIER                           = UNIT_END + 0x9EF, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_UI_SPELL_HIT_MODIFIER                     = UNIT_END + 0x9F0, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_HOME_REALM_TIME_OFFSET                    = UNIT_END + 0x9F1, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_MOD_PET_HASTE                             = UNIT_END + 0x9F2, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_BYTES2                                    = UNIT_END + 0x9F3, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_BYTES3                                    = UNIT_END + 0x9F4, // Size: 1, Flags: PRIVATE, URGENT_SELF_ONLY
+    PLAYER_FIELD_LFG_BONUS_FACTION_ID                      = UNIT_END + 0x9F5, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_LOOT_SPEC_ID                              = UNIT_END + 0x9F6, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_OVERRIDE_ZONE_PVP_TYPE                    = UNIT_END + 0x9F7, // Size: 1, Flags: PRIVATE, URGENT_SELF_ONLY
+    PLAYER_FIELD_BAG_SLOT_FLAGS                            = UNIT_END + 0x9F8, // Size: 4, Flags: PRIVATE
+    PLAYER_FIELD_BANK_BAG_SLOT_FLAGS                       = UNIT_END + 0x9FC, // Size: 7, Flags: PRIVATE
+    PLAYER_FIELD_INSERT_ITEMS_LEFT_TO_RIGHT                = UNIT_END + 0xA03, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_QUEST_COMPLETED                           = UNIT_END + 0xA04, // Size: 1750, Flags: PRIVATE
+    PLAYER_FIELD_HONOR                                     = UNIT_END + 0x10DA, // Size: 1, Flags: PRIVATE
+    PLAYER_FIELD_HONOR_NEXT_LEVEL                          = UNIT_END + 0x10DB, // Size: 1, Flags: PRIVATE
+    PLAYER_END                                             = UNIT_END + 0x10DC,
 };
 
 enum PlayerDynamicFields
@@ -318,7 +321,10 @@ enum PlayerDynamicFields
     PLAYER_DYNAMIC_FIELD_TRANSMOG                          = UNIT_DYNAMIC_END + 0x007, // Flags: PRIVATE
     PLAYER_DYNAMIC_FIELD_CONDITIONAL_TRANSMOG              = UNIT_DYNAMIC_END + 0x008, // Flags: PRIVATE
     PLAYER_DYNAMIC_FIELD_CHARACTER_RESTRICTIONS            = UNIT_DYNAMIC_END + 0x009, // Flags: PRIVATE
-    PLAYER_DYNAMIC_END                                     = UNIT_DYNAMIC_END + 0x00A,
+    PLAYER_DYNAMIC_FIELD_SPELL_PCT_MOD_BY_LABEL            = UNIT_DYNAMIC_END + 0x00A, // Flags: PRIVATE
+    PLAYER_DYNAMIC_FIELD_SPELL_FLAT_MOD_BY_LABEL           = UNIT_DYNAMIC_END + 0x00B, // Flags: PRIVATE
+    PLAYER_DYNAMIC_FIELD_ARENA_COOLDOWNS                   = UNIT_DYNAMIC_END + 0x00C, // Flags: PUBLIC
+    PLAYER_DYNAMIC_END                                     = UNIT_DYNAMIC_END + 0x00D,
 };
 
 enum GameObjectFields
@@ -347,11 +353,12 @@ enum GameObjectDynamicFields
 enum DynamicObjectFields
 {
     DYNAMICOBJECT_CASTER                                   = OBJECT_END + 0x000, // Size: 4, Flags: PUBLIC
-    DYNAMICOBJECT_BYTES                                    = OBJECT_END + 0x004, // Size: 1, Flags: DYNAMIC
-    DYNAMICOBJECT_SPELLID                                  = OBJECT_END + 0x005, // Size: 1, Flags: PUBLIC
-    DYNAMICOBJECT_RADIUS                                   = OBJECT_END + 0x006, // Size: 1, Flags: PUBLIC
-    DYNAMICOBJECT_CASTTIME                                 = OBJECT_END + 0x007, // Size: 1, Flags: PUBLIC
-    DYNAMICOBJECT_END                                      = OBJECT_END + 0x008,
+    DYNAMICOBJECT_TYPE                                     = OBJECT_END + 0x004, // Size: 1, Flags: PUBLIC
+    DYNAMICOBJECT_SPELL_X_SPELL_VISUAL_ID                  = OBJECT_END + 0x005, // Size: 1, Flags: PUBLIC
+    DYNAMICOBJECT_SPELLID                                  = OBJECT_END + 0x006, // Size: 1, Flags: PUBLIC
+    DYNAMICOBJECT_RADIUS                                   = OBJECT_END + 0x007, // Size: 1, Flags: PUBLIC
+    DYNAMICOBJECT_CASTTIME                                 = OBJECT_END + 0x008, // Size: 1, Flags: PUBLIC
+    DYNAMICOBJECT_END                                      = OBJECT_END + 0x009,
 };
 
 enum DynamicObjectDynamicFields
@@ -389,10 +396,12 @@ enum AreaTriggerFields
     AREATRIGGER_TIME_TO_TARGET_SCALE                       = OBJECT_END + 0x014, // Size: 1, Flags: PUBLIC, URGENT
     AREATRIGGER_TIME_TO_TARGET_EXTRA_SCALE                 = OBJECT_END + 0x015, // Size: 1, Flags: PUBLIC, URGENT
     AREATRIGGER_SPELLID                                    = OBJECT_END + 0x016, // Size: 1, Flags: PUBLIC
-    AREATRIGGER_SPELLVISUALID                              = OBJECT_END + 0x017, // Size: 1, Flags: DYNAMIC
-    AREATRIGGER_BOUNDS_RADIUS_2D                           = OBJECT_END + 0x018, // Size: 1, Flags: DYNAMIC, URGENT
-    AREATRIGGER_DECAL_PROPERTIES_ID                        = OBJECT_END + 0x019, // Size: 1, Flags: PUBLIC
-    AREATRIGGER_END                                        = OBJECT_END + 0x01A,
+    AREATRIGGER_SPELL_FOR_VISUALS                          = OBJECT_END + 0x017, // Size: 1, Flags: PUBLIC
+    AREATRIGGER_SPELL_X_SPELL_VISUAL_ID                    = OBJECT_END + 0x018, // Size: 1, Flags: PUBLIC
+    AREATRIGGER_BOUNDS_RADIUS_2D                           = OBJECT_END + 0x019, // Size: 1, Flags: DYNAMIC, URGENT
+    AREATRIGGER_DECAL_PROPERTIES_ID                        = OBJECT_END + 0x01A, // Size: 1, Flags: PUBLIC
+    AREATRIGGER_CREATING_EFFECT_GUID                       = OBJECT_END + 0x01B, // Size: 4, Flags: PUBLIC
+    AREATRIGGER_END                                        = OBJECT_END + 0x01F,
 };
 
 enum AreaTriggerDynamicFields
@@ -416,7 +425,7 @@ enum SceneObjectDynamicFields
 
 enum ConversationFields
 {
-    CONVERSATION_FIELD_LAST_LINE_DURATION                  = OBJECT_END + 0x000, // Size: 1, Flags: DYNAMIC
+    CONVERSATION_LAST_LINE_END_TIME                        = OBJECT_END + 0x000, // Size: 1, Flags: DYNAMIC
     CONVERSATION_END                                       = OBJECT_END + 0x001,
 };
 

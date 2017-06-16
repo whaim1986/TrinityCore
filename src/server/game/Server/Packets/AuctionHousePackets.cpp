@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,6 +18,7 @@
 #include "AuctionHousePackets.h"
 #include "AuctionHouseMgr.h"
 #include "ObjectGuid.h"
+#include "MailPackets.h"
 
 ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::AuctionHouse::AuctionItem const& auctionItem)
 {
@@ -38,16 +39,11 @@ ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::AuctionHouse::AuctionItem
     data.WriteBit(auctionItem.CensorBidInfo);
     data.FlushBits();
 
-    for (auto const& gem : auctionItem.Gems)
+    for (WorldPackets::Item::ItemGemData const& gem : auctionItem.Gems)
         data << gem;
 
-    for (WorldPackets::AuctionHouse::AuctionItem::AuctionItemEnchant const& enchant : auctionItem.Enchantments)
-    {
-        data << int32(enchant.ID);
-        data << uint32(enchant.Expiration);
-        data << int32(enchant.Charges);
-        data << uint8(enchant.Slot);
-    }
+    for (WorldPackets::Item::ItemEnchantData const& enchant : auctionItem.Enchantments)
+        data << enchant;
 
     if (!auctionItem.CensorServerSideInfo)
     {
@@ -143,15 +139,13 @@ void WorldPackets::AuctionHouse::AuctionSellItem::Read()
     _worldPacket >> BuyoutPrice;
     _worldPacket >> RunTime;
 
-    uint8 ItemsCount = _worldPacket.ReadBits(5);
-    _worldPacket.FlushBits();
+    Items.resize(_worldPacket.ReadBits(5));
+    _worldPacket.ResetBitPos();
 
-    for (uint8 i = 0; i < ItemsCount; i++)
+    for (WorldPackets::AuctionHouse::AuctionSellItem::AuctionItemForSale& item : Items)
     {
-        WorldPackets::AuctionHouse::AuctionSellItem::AuctionItemForSale item;
         _worldPacket >> item.Guid;
         _worldPacket >> item.UseCount;
-        Items.emplace_back(item);
     }
 }
 
@@ -167,7 +161,7 @@ void WorldPackets::AuctionHouse::AuctionListBidderItems::Read()
     _worldPacket >> Auctioneer;
     _worldPacket >> Offset;
     uint8 auctionItemIDsCount = _worldPacket.ReadBits(7);
-    _worldPacket.FlushBits();
+    _worldPacket.ResetBitPos();
 
     for (uint8 i = 0; i < auctionItemIDsCount; i++)
     {
@@ -273,6 +267,14 @@ void WorldPackets::AuctionHouse::AuctionListOwnerItems::Read()
 {
     _worldPacket >> Auctioneer;
     _worldPacket >> Offset;
+}
+
+WorldPackets::AuctionHouse::AuctionListPendingSalesResult::AuctionListPendingSalesResult() : ServerPacket(SMSG_AUCTION_LIST_PENDING_SALES_RESULT, 140)
+{
+}
+
+WorldPackets::AuctionHouse::AuctionListPendingSalesResult::~AuctionListPendingSalesResult()
+{
 }
 
 WorldPacket const* WorldPackets::AuctionHouse::AuctionListPendingSalesResult::Write()

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -15,23 +15,29 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Common.h"
-#include "SharedDefines.h"
-#include "DisableMgr.h"
-#include "ObjectMgr.h"
-#include "SocialMgr.h"
 #include "LFGMgr.h"
-#include "LFGScripts.h"
+#include "DatabaseEnv.h"
+#include "DB2Stores.h"
+#include "DisableMgr.h"
+#include "GameEventMgr.h"
+#include "Group.h"
+#include "GroupMgr.h"
+#include "InstanceSaveMgr.h"
 #include "LFGGroupData.h"
 #include "LFGPlayerData.h"
 #include "LFGQueue.h"
-#include "Group.h"
+#include "LFGScripts.h"
+#include "Log.h"
+#include "Map.h"
+#include "MotionMaster.h"
+#include "ObjectAccessor.h"
+#include "ObjectMgr.h"
 #include "Player.h"
 #include "RBAC.h"
-#include "GroupMgr.h"
-#include "GameEventMgr.h"
+#include "SharedDefines.h"
+#include "SocialMgr.h"
+#include "World.h"
 #include "WorldSession.h"
-#include "InstanceSaveMgr.h"
 
 namespace lfg
 {
@@ -95,19 +101,19 @@ void LFGMgr::_SaveToDB(ObjectGuid guid, uint32 db_guid)
     if (!guid.IsParty())
         return;
 
+    SQLTransaction trans = CharacterDatabase.BeginTransaction();
+
     PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_LFG_DATA);
-
     stmt->setUInt32(0, db_guid);
-
-    CharacterDatabase.Execute(stmt);
+    trans->Append(stmt);
 
     stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_LFG_DATA);
     stmt->setUInt32(0, db_guid);
-
     stmt->setUInt32(1, GetDungeon(guid));
     stmt->setUInt32(2, GetState(guid));
+    trans->Append(stmt);
 
-    CharacterDatabase.Execute(stmt);
+    CharacterDatabase.CommitTransaction(trans);
 }
 
 /// Load rewards for completing dungeons
@@ -1917,8 +1923,16 @@ bool LFGMgr::AllQueued(GuidList const& check)
         return false;
 
     for (GuidList::const_iterator it = check.begin(); it != check.end(); ++it)
-        if (GetState(*it) != LFG_STATE_QUEUED)
+    {
+        LfgState state = GetState(*it);
+        if (state != LFG_STATE_QUEUED)
+        {
+            if (state != LFG_STATE_PROPOSAL)
+                TC_LOG_DEBUG("lfg.allqueued", "Unexpected state found while trying to form new group. Guid: %s, State: %s", (*it).ToString().c_str(), GetStateString(state).c_str());
+
             return false;
+        }
+    }
     return true;
 }
 

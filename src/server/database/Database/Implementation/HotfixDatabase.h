@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -21,10 +21,9 @@
 #ifndef _HOTFIXDATABASE_H
 #define _HOTFIXDATABASE_H
 
-#include "DatabaseWorkerPool.h"
 #include "MySQLConnection.h"
 
-enum HotfixDatabaseStatements
+enum HotfixDatabaseStatements : uint32
 {
     /*  Naming standard for defines:
         {DB}_{SEL/INS/UPD/DEL/REP}_{Summary of data changed}
@@ -60,6 +59,8 @@ enum HotfixDatabaseStatements
     HOTFIX_SEL_ARTIFACT_POWER,
 
     HOTFIX_SEL_ARTIFACT_POWER_LINK,
+
+    HOTFIX_SEL_ARTIFACT_POWER_PICKER,
 
     HOTFIX_SEL_ARTIFACT_POWER_RANK,
 
@@ -111,7 +112,11 @@ enum HotfixDatabaseStatements
     HOTFIX_SEL_CHR_SPECIALIZATION,
     HOTFIX_SEL_CHR_SPECIALIZATION_LOCALE,
 
+    HOTFIX_SEL_CINEMATIC_CAMERA,
+
     HOTFIX_SEL_CINEMATIC_SEQUENCES,
+
+    HOTFIX_SEL_CONVERSATION_LINE,
 
     HOTFIX_SEL_CREATURE_DISPLAY_INFO,
 
@@ -196,7 +201,11 @@ enum HotfixDatabaseStatements
 
     HOTFIX_SEL_GEM_PROPERTIES,
 
+    HOTFIX_SEL_GLYPH_BINDABLE_SPELL,
+
     HOTFIX_SEL_GLYPH_PROPERTIES,
+
+    HOTFIX_SEL_GLYPH_REQUIRED_SPEC,
 
     HOTFIX_SEL_GUILD_COLOR_BACKGROUND,
 
@@ -323,6 +332,8 @@ enum HotfixDatabaseStatements
 
     HOTFIX_SEL_MOUNT_TYPE_X_CAPABILITY,
 
+    HOTFIX_SEL_MOUNT_X_DISPLAY,
+
     HOTFIX_SEL_MOVIE,
 
     HOTFIX_SEL_NAME_GEN,
@@ -345,7 +356,14 @@ enum HotfixDatabaseStatements
 
     HOTFIX_SEL_POWER_DISPLAY,
 
+    HOTFIX_SEL_POWER_TYPE,
+
+    HOTFIX_SEL_PRESTIGE_LEVEL_INFO,
+    HOTFIX_SEL_PRESTIGE_LEVEL_INFO_LOCALE,
+
     HOTFIX_SEL_PVP_DIFFICULTY,
+
+    HOTFIX_SEL_PVP_REWARD,
 
     HOTFIX_SEL_QUEST_FACTION_REWARD,
 
@@ -362,9 +380,23 @@ enum HotfixDatabaseStatements
 
     HOTFIX_SEL_RAND_PROP_POINTS,
 
+    HOTFIX_SEL_REWARD_PACK,
+
+    HOTFIX_SEL_REWARD_PACK_X_ITEM,
+
     HOTFIX_SEL_RULESET_ITEM_UPGRADE,
 
     HOTFIX_SEL_SCALING_STAT_DISTRIBUTION,
+
+    HOTFIX_SEL_SCENARIO,
+    HOTFIX_SEL_SCENARIO_LOCALE,
+
+    HOTFIX_SEL_SCENARIO_STEP,
+    HOTFIX_SEL_SCENARIO_STEP_LOCALE,
+
+    HOTFIX_SEL_SCENE_SCRIPT,
+
+    HOTFIX_SEL_SCENE_SCRIPT_PACKAGE,
 
     HOTFIX_SEL_SKILL_LINE,
     HOTFIX_SEL_SKILL_LINE_LOCALE,
@@ -453,6 +485,8 @@ enum HotfixDatabaseStatements
 
     HOTFIX_SEL_SUMMON_PROPERTIES,
 
+    HOTFIX_SEL_TACT_KEY,
+
     HOTFIX_SEL_TALENT,
     HOTFIX_SEL_TALENT_LOCALE,
 
@@ -501,13 +535,12 @@ public:
     typedef HotfixDatabaseStatements Statements;
 
     //- Constructors for sync and async connections
-    HotfixDatabaseConnection(MySQLConnectionInfo& connInfo) : MySQLConnection(connInfo) { }
-    HotfixDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* q, MySQLConnectionInfo& connInfo) : MySQLConnection(q, connInfo) { }
+    HotfixDatabaseConnection(MySQLConnectionInfo& connInfo);
+    HotfixDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* q, MySQLConnectionInfo& connInfo);
+    ~HotfixDatabaseConnection();
 
     //- Loads database type specific prepared statements
     void DoPrepareStatements() override;
 };
-
-typedef DatabaseWorkerPool<HotfixDatabaseConnection> HotfixDatabaseWorkerPool;
 
 #endif

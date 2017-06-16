@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -19,9 +19,9 @@
 #include "SkillExtraItems.h"
 #include "DatabaseEnv.h"
 #include "Log.h"
-#include "Player.h"
 #include "ObjectMgr.h"
-#include <map>
+#include "Player.h"
+#include "SpellMgr.h"
 
 // some type definitions
 // no use putting them in the header file, they're only used in this .cpp

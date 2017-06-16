@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,13 +16,14 @@
  */
 
 #include "PartyPackets.h"
-
-#include "Player.h"
 #include "Pet.h"
-#include "Vehicle.h"
-#include "SpellAuras.h"
+#include "Player.h"
+#include "Realm.h"
 #include "SpellAuraEffects.h"
-#include "ObjectMgr.h"
+#include "SpellAuras.h"
+#include "Vehicle.h"
+#include "World.h"
+#include "WorldSession.h"
 
 WorldPacket const* WorldPackets::Party::PartyCommandResult::Write()
 {
@@ -47,7 +48,6 @@ void WorldPackets::Party::PartyInviteClient::Read()
     _worldPacket >> PartyIndex;
     _worldPacket >> ProposedRoles;
     _worldPacket >> TargetGUID;
-    _worldPacket >> TargetCfgRealmID;
 
     targetNameLen = _worldPacket.ReadBits(9);
     targetRealmLen = _worldPacket.ReadBits(9);
@@ -98,9 +98,9 @@ void WorldPackets::Party::PartyInvite::Initialize(Player* const inviter, int32 p
 
     ProposedRoles = proposedRoles;
 
-    InviterVirtualRealmAddress = GetVirtualRealmAddress();
-    InviterRealmNameActual = sObjectMgr->GetRealmName(realm.Id.Realm);
-    InviterRealmNameNormalized = sObjectMgr->GetNormalizedRealmName(realm.Id.Realm);
+    InviterVirtualRealmAddress = realm.Id.GetAddress();
+    InviterRealmNameActual = realm.Name;
+    InviterRealmNameNormalized = realm.NormalizedName;
 }
 
 void WorldPackets::Party::PartyInviteResponse::Read()
@@ -419,6 +419,7 @@ WorldPacket const* WorldPackets::Party::GroupNewLeader::Write()
 ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::Party::PartyPlayerInfo const& playerInfo)
 {
     data.WriteBits(playerInfo.Name.size(), 6);
+    data.WriteBit(playerInfo.FromSocialQueue);
     data << playerInfo.GUID;
     data << uint8(playerInfo.Status);
     data << uint8(playerInfo.Subgroup);

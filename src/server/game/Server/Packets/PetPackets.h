@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,10 +19,11 @@
 #define PetPackets_h__
 
 #include "Packet.h"
-#include "PacketUtilities.h"
+#include "Position.h"
 #include "ObjectGuid.h"
-#include "Unit.h"
-#include "WorldSession.h"
+#include "Optional.h"
+#include "UnitDefines.h"
+#include <array>
 
 namespace WorldPackets
 {
@@ -83,6 +84,7 @@ namespace WorldPackets
             int32 SpellID = 0;
             int32 Duration = 0;
             int32 CategoryDuration = 0;
+            float ModRate = 1.0f;
             uint16 Category = 0;
         };
 
@@ -90,6 +92,7 @@ namespace WorldPackets
         {
             int32 CategoryID = 0;
             int32 RecoveryTime = 0;
+            float ChargeModRate = 1.0f;
             int8 ConsumedCharges = 0;
         };
 
@@ -157,7 +160,6 @@ namespace WorldPackets
             std::vector<uint32> Spells;
         };
 
-
         struct PetRenameData
         {
             ObjectGuid PetGUID;
@@ -198,7 +200,7 @@ namespace WorldPackets
             ObjectGuid PetGUID;
             uint32 Action = 0;
             ObjectGuid TargetGUID;
-            G3D::Vector3 ActionPosition;
+            TaggedPosition<Position::XYZ> ActionPosition;
         };
 
         class PetSetAction final : public ClientPacket

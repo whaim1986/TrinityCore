@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,8 +19,13 @@
 #define ItemPackets_h__
 
 #include "Packet.h"
-#include "Item.h"
+#include "DBCEnums.h"
+#include "ItemDefines.h"
+#include "ItemPacketsCommon.h"
 #include "PacketUtilities.h"
+#include "ObjectGuid.h"
+#include "Optional.h"
+#include <array>
 
 struct VoidStorageItem;
 
@@ -28,38 +33,6 @@ namespace WorldPackets
 {
     namespace Item
     {
-        struct ItemBonusInstanceData
-        {
-            uint8 Context = 0;
-            std::vector<int32> BonusListIDs;
-
-            bool operator==(ItemBonusInstanceData const& r) const;
-            bool operator!=(ItemBonusInstanceData const& r) const { return !(*this == r); }
-        };
-
-        struct ItemInstance
-        {
-            void Initialize(::Item const* item);
-            void Initialize(::ItemDynamicFieldGems const* gem);
-            void Initialize(::LootItem const& lootItem);
-            void Initialize(::VoidStorageItem const* voidItem);
-
-            uint32 ItemID = 0;
-            uint32 RandomPropertiesSeed = 0;
-            uint32 RandomPropertiesID = 0;
-            Optional<ItemBonusInstanceData> ItemBonus;
-            Optional<CompactArray<int32>> Modifications;
-
-            bool operator==(ItemInstance const& r) const;
-            bool operator!=(ItemInstance const& r) const { return !(*this == r); }
-        };
-
-        struct ItemGemInstanceData
-        {
-            uint8 Slot;
-            ItemInstance Item;
-        };
-
         class BuyBackItem final : public ClientPacket
         {
         public:
@@ -230,17 +203,6 @@ namespace WorldPackets
 
             uint32 ProficiencyMask = 0;
             uint8 ProficiencyClass = 0;
-        };
-
-        struct InvUpdate
-        {
-            struct InvItem
-            {
-                uint8 ContainerSlot = 0;
-                uint8 Slot = 0;
-            };
-
-            std::vector<InvItem> Items;
         };
 
         class InventoryChangeFailure final : public ServerPacket
@@ -517,7 +479,7 @@ namespace WorldPackets
             void Read() override;
 
             ObjectGuid ItemGuid;
-            ObjectGuid GemItem[MAX_GEM_SOCKETS];
+            std::array<ObjectGuid, MAX_ITEM_PROTO_SOCKETS> GemItem;
         };
 
         class SocketGemsResult final : public ServerPacket
@@ -529,16 +491,7 @@ namespace WorldPackets
 
             ObjectGuid Item;
         };
-
-        ByteBuffer& operator>>(ByteBuffer& data, InvUpdate& invUpdate);
     }
 }
-
-ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::Item::ItemBonusInstanceData const& itemBonusInstanceData);
-ByteBuffer& operator>>(ByteBuffer& data, WorldPackets::Item::ItemBonusInstanceData& itemBonusInstanceData);
-ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::Item::ItemInstance const& itemInstance);
-ByteBuffer& operator>>(ByteBuffer& data, WorldPackets::Item::ItemInstance& itemInstance);
-ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::Item::ItemGemInstanceData const& itemGemInstanceData);
-ByteBuffer& operator>>(ByteBuffer& data, WorldPackets::Item::ItemGemInstanceData& itemGemInstanceData);
 
 #endif // ItemPackets_h__

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2006-2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -20,11 +20,17 @@
 // Gormok - Snobolled (creature at back)
 
 #include "ScriptMgr.h"
+#include "InstanceScript.h"
+#include "Map.h"
+#include "MotionMaster.h"
+#include "ObjectAccessor.h"
+#include "Player.h"
 #include "ScriptedCreature.h"
+#include "SpellScript.h"
+#include "SpellAuraEffects.h"
+#include "TemporarySummon.h"
 #include "trial_of_the_crusader.h"
 #include "Vehicle.h"
-#include "Player.h"
-#include "SpellScript.h"
 
 enum Yells
 {
@@ -33,6 +39,7 @@ enum Yells
 
     // Acidmaw & Dreadscale
     EMOTE_ENRAGE            = 0,
+    SAY_SPECIAL             = 1,
 
     // Icehowl
     EMOTE_TRAMPLE_START     = 0,
@@ -78,22 +85,29 @@ enum BossSpells
     SPELL_FIRE_BOMB_DOT     = 66318,
     SPELL_HEAD_CRACK        = 66407,
 
-    //Acidmaw & Dreadscale
-    SPELL_ACID_SPIT         = 66880,
-    SPELL_PARALYTIC_SPRAY   = 66901,
-    SPELL_ACID_SPEW         = 66819,
-    SPELL_PARALYTIC_BITE    = 66824,
-    SPELL_SWEEP_0           = 66794,
+    //Acidmaw & Dreadscale Generic
+    SPELL_SWEEP             = 66794,
     SUMMON_SLIME_POOL       = 66883,
-    SPELL_FIRE_SPIT         = 66796,
-    SPELL_MOLTEN_SPEW       = 66821,
-    SPELL_BURNING_BITE      = 66879,
-    SPELL_BURNING_SPRAY     = 66902,
-    SPELL_SWEEP_1           = 67646,
-    SPELL_EMERGE_0          = 66947,
-    SPELL_SUBMERGE_0        = 66948,
+    SPELL_EMERGE            = 66947,
+    SPELL_SUBMERGE          = 66948,
     SPELL_ENRAGE            = 68335,
     SPELL_SLIME_POOL_EFFECT = 66882, //In 60s it diameter grows from 10y to 40y (r=r+0.25 per second)
+    SPELL_GROUND_VISUAL_0   = 66969,
+    SPELL_GROUND_VISUAL_1   = 68302,
+    SPELL_HATE_TO_ZERO      = 63984,
+    //Acidmaw
+    SPELL_ACID_SPIT         = 66880,
+    SPELL_PARALYTIC_SPRAY   = 66901,
+    SPELL_PARALYTIC_BITE    = 66824, //Paralytic Toxin
+    SPELL_ACID_SPEW         = 66818,
+    SPELL_PARALYSIS         = 66830,
+    SPELL_PARALYTIC_TOXIN   = 66823,
+    //Dreadscale
+    SPELL_BURNING_BITE      = 66879, // Burning Bile
+    SPELL_MOLTEN_SPEW       = 66821,
+    SPELL_FIRE_SPIT         = 66796,
+    SPELL_BURNING_SPRAY     = 66902,
+    SPELL_BURNING_BILE      = 66869,
 
     //Icehowl
     SPELL_FEROCIOUS_BUTT    = 66770,
@@ -182,7 +196,7 @@ class boss_gormok : public CreatureScript
                 {
                     case 0:
                         instance->DoUseDoorOrButton(instance->GetGuidData(GO_MAIN_GATE_DOOR));
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_IMMUNE_TO_PC);
                         me->SetReactState(REACT_AGGRESSIVE);
                         me->SetInCombatWithZone();
                         break;
@@ -279,7 +293,7 @@ class boss_gormok : public CreatureScript
 
         CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<boss_gormokAI>(creature);
+            return GetTrialOfTheCrusaderAI<boss_gormokAI>(creature);
         }
 };
 
@@ -440,7 +454,7 @@ class npc_snobold_vassal : public CreatureScript
 
         CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<npc_snobold_vassalAI>(creature);
+            return GetTrialOfTheCrusaderAI<npc_snobold_vassalAI>(creature);
         }
 };
 
@@ -476,7 +490,7 @@ class npc_firebomb : public CreatureScript
 
         CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<npc_firebombAI>(creature);
+            return GetTrialOfTheCrusaderAI<npc_firebombAI>(creature);
         }
 };
 
@@ -549,7 +563,7 @@ struct boss_jormungarAI : public BossAI
 
         if (!Enraged && instance->GetData(TYPE_NORTHREND_BEASTS) == SNAKES_SPECIAL)
         {
-            me->RemoveAurasDueToSpell(SPELL_SUBMERGE_0);
+            me->RemoveAurasDueToSpell(SPELL_SUBMERGE);
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
             DoCast(SPELL_ENRAGE);
             Enraged = true;
@@ -586,10 +600,11 @@ struct boss_jormungarAI : public BossAI
                 case EVENT_SUMMON_ACIDMAW:
                     if (Creature* acidmaw = me->SummonCreature(NPC_ACIDMAW, ToCCommonLoc[9].GetPositionX(), ToCCommonLoc[9].GetPositionY(), ToCCommonLoc[9].GetPositionZ(), 5, TEMPSUMMON_MANUAL_DESPAWN))
                     {
-                        acidmaw->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+                        acidmaw->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_IMMUNE_TO_PC);
                         acidmaw->SetReactState(REACT_AGGRESSIVE);
                         acidmaw->SetInCombatWithZone();
-                        acidmaw->CastSpell(acidmaw, SPELL_EMERGE_0);
+                        acidmaw->CastSpell(acidmaw, SPELL_EMERGE);
+                        acidmaw->CastSpell(acidmaw, SPELL_GROUND_VISUAL_1, true);
                     }
                     return;
                 case EVENT_SPRAY:
@@ -598,7 +613,7 @@ struct boss_jormungarAI : public BossAI
                     events.ScheduleEvent(EVENT_SPRAY, urand(15*IN_MILLISECONDS, 30*IN_MILLISECONDS), 0, PHASE_STATIONARY);
                     return;
                 case EVENT_SWEEP:
-                    DoCastAOE(SPELL_SWEEP_0);
+                    DoCastAOE(SPELL_SWEEP);
                     events.ScheduleEvent(EVENT_SWEEP, urand(15*IN_MILLISECONDS, 30*IN_MILLISECONDS), 0, PHASE_STATIONARY);
                     return;
                 default:
@@ -608,13 +623,14 @@ struct boss_jormungarAI : public BossAI
         if (events.IsInPhase(PHASE_MOBILE))
             DoMeleeAttackIfReady();
         if (events.IsInPhase(PHASE_STATIONARY))
-            DoSpellAttackIfReady(SpitSpell);
+            DoCastVictim(SpitSpell);
     }
 
     void Submerge()
     {
-        DoCast(me, SPELL_SUBMERGE_0);
-        me->RemoveAurasDueToSpell(SPELL_EMERGE_0);
+        DoCast(me, SPELL_SUBMERGE);
+        DoCast(me, SPELL_GROUND_VISUAL_0, true);
+        me->RemoveAurasDueToSpell(SPELL_EMERGE);
         me->SetInCombatWithZone();
         events.SetPhase(PHASE_SUBMERGED);
         events.ScheduleEvent(EVENT_EMERGE, 5*IN_MILLISECONDS, 0, PHASE_SUBMERGED);
@@ -625,17 +641,20 @@ struct boss_jormungarAI : public BossAI
 
     void Emerge()
     {
-        DoCast(me, SPELL_EMERGE_0);
+        DoCast(me, SPELL_EMERGE);
+        DoCastAOE(SPELL_HATE_TO_ZERO, true);
         me->SetDisplayId(ModelMobile);
-        me->RemoveAurasDueToSpell(SPELL_SUBMERGE_0);
+        me->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+        me->RemoveAurasDueToSpell(SPELL_GROUND_VISUAL_0);
         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
 
         // if the worm was mobile before submerging, make him stationary now
         if (WasMobile)
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+            me->SetControlled(true, UNIT_STATE_ROOT);
             SetCombatMovement(false);
             me->SetDisplayId(ModelStationary);
+            me->CastSpell(me, SPELL_GROUND_VISUAL_1, true);
             events.SetPhase(PHASE_STATIONARY);
             events.ScheduleEvent(EVENT_SUBMERGE, 45*IN_MILLISECONDS, 0, PHASE_STATIONARY);
             events.ScheduleEvent(EVENT_SPIT, urand(15*IN_MILLISECONDS, 30*IN_MILLISECONDS), 0, PHASE_STATIONARY);
@@ -644,10 +663,11 @@ struct boss_jormungarAI : public BossAI
         }
         else
         {
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+            me->SetControlled(false, UNIT_STATE_ROOT);
             SetCombatMovement(true);
             me->GetMotionMaster()->MoveChase(me->GetVictim());
             me->SetDisplayId(ModelMobile);
+            me->RemoveAurasDueToSpell(SPELL_GROUND_VISUAL_1);
             events.SetPhase(PHASE_MOBILE);
             events.ScheduleEvent(EVENT_SUBMERGE, 45*IN_MILLISECONDS, 0, PHASE_MOBILE);
             events.ScheduleEvent(EVENT_BITE, urand(15*IN_MILLISECONDS, 30*IN_MILLISECONDS), 0, PHASE_MOBILE);
@@ -698,7 +718,7 @@ class boss_acidmaw : public CreatureScript
 
         CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<boss_acidmawAI>(creature);
+            return GetTrialOfTheCrusaderAI<boss_acidmawAI>(creature);
         }
 };
 
@@ -737,7 +757,7 @@ class boss_dreadscale : public CreatureScript
                 {
                     case 0:
                         instance->DoCloseDoorOrButton(instance->GetGuidData(GO_MAIN_GATE_DOOR));
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_IMMUNE_TO_PC);
                         me->SetReactState(REACT_AGGRESSIVE);
                         me->SetInCombatWithZone();
                         break;
@@ -762,7 +782,7 @@ class boss_dreadscale : public CreatureScript
 
         CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<boss_dreadscaleAI>(creature);
+            return GetTrialOfTheCrusaderAI<boss_dreadscaleAI>(creature);
         }
 };
 
@@ -809,7 +829,7 @@ class npc_slime_pool : public CreatureScript
 
         CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<npc_slime_poolAI>(creature);
+            return GetTrialOfTheCrusaderAI<npc_slime_poolAI>(creature);
         }
 };
 
@@ -910,7 +930,7 @@ class boss_icehowl : public CreatureScript
                         break;
                     case 2:
                         instance->DoUseDoorOrButton(instance->GetGuidData(GO_MAIN_GATE_DOOR));
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_IMMUNE_TO_PC);
                         me->SetReactState(REACT_AGGRESSIVE);
                         me->SetInCombatWithZone();
                         break;
@@ -989,6 +1009,9 @@ class boss_icehowl : public CreatureScript
                                 default:
                                     break;
                             }
+
+                            if (me->HasUnitState(UNIT_STATE_CASTING))
+                                return;
                         }
                         DoMeleeAttackIfReady();
                         break;
@@ -1008,7 +1031,8 @@ class boss_icehowl : public CreatureScript
                             me->SetTarget(_trampleTargetGUID);
                             _trampleCast = false;
                             SetCombatMovement(false);
-                            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
+                            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            me->SetControlled(true, UNIT_STATE_ROOT);
                             me->GetMotionMaster()->Clear();
                             me->GetMotionMaster()->MoveIdle();
                             events.ScheduleEvent(EVENT_TRAMPLE, 4*IN_MILLISECONDS);
@@ -1035,6 +1059,7 @@ class boss_icehowl : public CreatureScript
                                         _trampleTargetZ = target->GetPositionZ();
                                         // 2: Hop Backwards
                                         me->GetMotionMaster()->MoveJump(2*me->GetPositionX() - _trampleTargetX, 2*me->GetPositionY() - _trampleTargetY, me->GetPositionZ(), me->GetOrientation(), 30.0f, 20.0f, 0);
+                                        me->SetControlled(false, UNIT_STATE_ROOT);
                                         _stage = 7; //Invalid (Do nothing more than move)
                                     }
                                     else
@@ -1044,6 +1069,9 @@ class boss_icehowl : public CreatureScript
                                 default:
                                     break;
                             }
+
+                            if (me->HasUnitState(UNIT_STATE_CASTING))
+                                return;
                         }
                         break;
                     case 4:
@@ -1092,7 +1120,7 @@ class boss_icehowl : public CreatureScript
                             Talk(EMOTE_TRAMPLE_FAIL);
                         }
                         _movementStarted = false;
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                         SetCombatMovement(true);
                         me->GetMotionMaster()->MovementExpired();
                         me->GetMotionMaster()->Clear();
@@ -1118,8 +1146,146 @@ class boss_icehowl : public CreatureScript
 
         CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<boss_icehowlAI>(creature);
+            return GetTrialOfTheCrusaderAI<boss_icehowlAI>(creature);
         }
+};
+
+class spell_jormungars_paralytic_toxin : public SpellScriptLoader
+{
+public:
+    spell_jormungars_paralytic_toxin() : SpellScriptLoader("spell_jormungars_paralytic_toxin") { }
+
+    class spell_jormungars_paralytic_toxin_AuraScript : public AuraScript
+    {
+        PrepareAuraScript(spell_jormungars_paralytic_toxin_AuraScript);
+
+        bool Validate(SpellInfo const* /*spell*/) override
+        {
+            return ValidateSpellInfo({ SPELL_PARALYSIS });
+        }
+
+        void OnApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+        {
+            Unit* caster = GetCaster();
+            if (caster && caster->GetEntry() == NPC_ACIDMAW)
+            {
+                if (Creature* acidMaw = caster->ToCreature())
+                    acidMaw->AI()->Talk(SAY_SPECIAL, GetTarget());
+            }
+        }
+
+        void OnRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+        {
+            GetTarget()->RemoveAurasDueToSpell(SPELL_PARALYSIS);
+        }
+
+        void CalculateAmount(AuraEffect const* aurEff, int32& amount, bool& canBeRecalculated)
+        {
+            if (!canBeRecalculated)
+                amount = aurEff->GetAmount();
+
+            canBeRecalculated = false;
+        }
+
+        void HandleDummy(AuraEffect const* /*aurEff*/)
+        {
+            if (AuraEffect* slowEff = GetEffect(EFFECT_0))
+            {
+                int32 newAmount = slowEff->GetAmount() - 10;
+                if (newAmount < -100)
+                    newAmount = -100;
+                slowEff->ChangeAmount(newAmount);
+
+                if (newAmount <= -100 && !GetTarget()->HasAura(SPELL_PARALYSIS))
+                    GetTarget()->CastSpell(GetTarget(), SPELL_PARALYSIS, true, NULL, slowEff, GetCasterGUID());
+            }
+        }
+
+        void Register() override
+        {
+            AfterEffectApply += AuraEffectApplyFn(spell_jormungars_paralytic_toxin_AuraScript::OnApply, EFFECT_0, SPELL_AURA_MOD_DECREASE_SPEED, AURA_EFFECT_HANDLE_REAL);
+            AfterEffectRemove += AuraEffectRemoveFn(spell_jormungars_paralytic_toxin_AuraScript::OnRemove, EFFECT_0, SPELL_AURA_MOD_DECREASE_SPEED, AURA_EFFECT_HANDLE_REAL);
+            DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_jormungars_paralytic_toxin_AuraScript::CalculateAmount, EFFECT_0, SPELL_AURA_MOD_DECREASE_SPEED);
+            OnEffectPeriodic += AuraEffectPeriodicFn(spell_jormungars_paralytic_toxin_AuraScript::HandleDummy, EFFECT_2, SPELL_AURA_PERIODIC_DUMMY);
+        }
+    };
+
+    AuraScript* GetAuraScript() const override
+    {
+        return new spell_jormungars_paralytic_toxin_AuraScript();
+    }
+};
+
+class spell_jormungars_snakes_spray : public SpellScriptLoader
+{
+public:
+    spell_jormungars_snakes_spray(const char* name, uint32 spellId) : SpellScriptLoader(name), _spellId(spellId) { }
+
+    class spell_jormungars_snakes_spray_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_jormungars_snakes_spray_SpellScript);
+
+    public:
+        spell_jormungars_snakes_spray_SpellScript(uint32 spellId) : SpellScript(), _spellId(spellId) { }
+
+        bool Validate(SpellInfo const* /*spell*/) override
+        {
+            return ValidateSpellInfo({ _spellId });
+        }
+
+        void HandleScript(SpellEffIndex /*effIndex*/)
+        {
+            if (Player* target = GetHitPlayer())
+                GetCaster()->CastSpell(target, _spellId, true);
+        }
+
+        void Register() override
+        {
+            OnEffectHitTarget += SpellEffectFn(spell_jormungars_snakes_spray_SpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+        }
+
+    private:
+        uint32 _spellId;
+    };
+
+    SpellScript* GetSpellScript() const override
+    {
+        return new spell_jormungars_snakes_spray_SpellScript(_spellId);
+    }
+
+private:
+    uint32 _spellId;
+};
+
+class spell_jormungars_paralysis : public SpellScriptLoader
+{
+public:
+    spell_jormungars_paralysis() : SpellScriptLoader("spell_jormungars_paralysis") { }
+
+    class spell_jormungars_paralysis_AuraScript : public AuraScript
+    {
+        PrepareAuraScript(spell_jormungars_paralysis_AuraScript);
+
+        void OnApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+        {
+            if (Unit* caster = GetCaster())
+                if (InstanceScript* instance = caster->GetInstanceScript())
+                    if (instance->GetData(TYPE_NORTHREND_BEASTS) == SNAKES_IN_PROGRESS || instance->GetData(TYPE_NORTHREND_BEASTS) == SNAKES_SPECIAL)
+                        return;
+
+            Remove();
+        }
+
+        void Register() override
+        {
+            AfterEffectApply += AuraEffectApplyFn(spell_jormungars_paralysis_AuraScript::OnApply, EFFECT_0, SPELL_AURA_MOD_STUN, AURA_EFFECT_HANDLE_REAL);
+        }
+    };
+
+    AuraScript* GetAuraScript() const override
+    {
+        return new spell_jormungars_paralysis_AuraScript();
+    }
 };
 
 void AddSC_boss_northrend_beasts()
@@ -1132,6 +1298,10 @@ void AddSC_boss_northrend_beasts()
     new boss_acidmaw();
     new boss_dreadscale();
     new npc_slime_pool();
+    new spell_jormungars_paralytic_toxin();
+    new spell_jormungars_snakes_spray("spell_jormungars_burning_spray", SPELL_BURNING_BILE);
+    new spell_jormungars_snakes_spray("spell_jormungars_paralytic_spray", SPELL_PARALYTIC_TOXIN);
+    new spell_jormungars_paralysis();
 
     new boss_icehowl();
 }

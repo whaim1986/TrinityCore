@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -19,18 +19,32 @@
 #ifndef _AUCTION_HOUSE_MGR_H
 #define _AUCTION_HOUSE_MGR_H
 
-#include "Common.h"
-#include "DatabaseEnv.h"
+#include "Define.h"
+#include "DatabaseEnvFwd.h"
+#include "ItemTemplate.h"
 #include "ObjectGuid.h"
-#include "AuctionHousePackets.h"
+#include "Optional.h"
+#include <map>
 #include <set>
+#include <unordered_map>
 
 class Item;
 class Player;
 class WorldPacket;
 
+namespace WorldPackets
+{
+    namespace AuctionHouse
+    {
+        struct AuctionItem;
+        class AuctionListBidderItemsResult;
+        class AuctionListOwnerItemsResult;
+        class AuctionListItemsResult;
+        class AuctionReplicateResponse;
+    }
+}
+
 #define MIN_AUCTION_TIME (12*HOUR)
-#define MAX_AUCTION_ITEMS 160
 
 enum AuctionError
 {
@@ -128,10 +142,10 @@ class TC_GAME_API AuctionHouseObject
 
     struct PlayerGetAllThrottleData
     {
-        uint32 Global;
-        uint32 Cursor;
-        uint32 Tombstone;
-        time_t NextAllowedReplication;
+        uint32 Global = 0;
+        uint32 Cursor = 0;
+        uint32 Tombstone = 0;
+        time_t NextAllowedReplication = 0;
 
         bool IsReplicationInProgress() const { return Cursor != Tombstone && Global != 0; }
     };

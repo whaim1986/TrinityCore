@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,8 +16,8 @@
  */
 
 #include "KillRewarder.h"
-#include "SpellAuraEffects.h"
 #include "Creature.h"
+#include "DB2Stores.h"
 #include "Formulas.h"
 #include "Group.h"
 #include "Guild.h"
@@ -25,6 +25,8 @@
 #include "InstanceScript.h"
 #include "Pet.h"
 #include "Player.h"
+#include "Scenario.h"
+#include "SpellAuraEffects.h"
 
  // == KillRewarder ====================================================
  // KillRewarder encapsulates logic of rewarding player upon kill with:
@@ -67,6 +69,7 @@
  // 4.4. Give kill credit (player must not be in group, or he must be alive or without corpse).
  // 5. Credit instance encounter.
  // 6. Update guild achievements.
+ // 7. Scenario credit
 
 KillRewarder::KillRewarder(Player* killer, Unit* victim, bool isBattleGround) :
     // 1. Initialize internal variables to default values.
@@ -269,15 +272,18 @@ void KillRewarder::Reward()
 
     // 5. Credit instance encounter.
     // 6. Update guild achievements.
+    // 7. Credit scenario criterias
     if (Creature* victim = _victim->ToCreature())
     {
         if (victim->IsDungeonBoss())
             if (InstanceScript* instance = _victim->GetInstanceScript())
-                instance->UpdateEncounterState(ENCOUNTER_CREDIT_KILL_CREATURE, _victim->GetEntry(), _victim);
+                instance->UpdateEncounterStateForKilledCreature(_victim->GetEntry(), _victim);
 
         if (ObjectGuid::LowType guildId = victim->GetMap()->GetOwnerGuildId())
             if (Guild* guild = sGuildMgr->GetGuildById(guildId))
                 guild->UpdateCriteria(CRITERIA_TYPE_KILL_CREATURE, victim->GetEntry(), 1, 0, victim, _killer);
-    }
 
+        if (Scenario* scenario = victim->GetScenario())
+            scenario->UpdateCriteria(CRITERIA_TYPE_KILL_CREATURE, victim->GetEntry(), 1, 0, victim, _killer);
+    }
 }

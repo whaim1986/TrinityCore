@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -16,15 +16,20 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "DynamicObject.h"
 #include "Common.h"
-#include "Opcodes.h"
-#include "World.h"
+#include "Log.h"
+#include "Map.h"
 #include "ObjectAccessor.h"
-#include "DatabaseEnv.h"
-#include "GridNotifiers.h"
-#include "GridNotifiersImpl.h"
+#include "Player.h"
 #include "ScriptMgr.h"
+#include "SpellAuras.h"
+#include "SpellInfo.h"
+#include "SpellMgr.h"
 #include "Transport.h"
+#include "Unit.h"
+#include "UpdateData.h"
+#include "World.h"
 
 DynamicObject::DynamicObject(bool isWorldObject) : WorldObject(isWorldObject),
     _aura(NULL), _removedAura(NULL), _caster(NULL), _duration(0), _spellXSpellVisualId(0), _isViewpoint(false)
@@ -93,14 +98,11 @@ bool DynamicObject::CreateDynamicObject(ObjectGuid::LowType guidlow, Unit* caste
     WorldObject::_Create(ObjectGuid::Create<HighGuid::DynamicObject>(GetMapId(), spell->Id, guidlow));
     SetPhaseMask(caster->GetPhaseMask(), false);
 
-    uint32 spellVisual = 0;
-    if (SpellXSpellVisualEntry const* visual = sSpellXSpellVisualStore.LookupEntry(spellXSpellVisualId))
-        spellVisual = visual->SpellVisualID[0];
-
     SetEntry(spell->Id);
     SetObjectScale(1.0f);
     SetGuidValue(DYNAMICOBJECT_CASTER, caster->GetGUID());
-    SetUInt32Value(DYNAMICOBJECT_BYTES, spellVisual | (type << 28));
+    SetUInt32Value(DYNAMICOBJECT_TYPE, type);
+    SetUInt32Value(DYNAMICOBJECT_SPELL_X_SPELL_VISUAL_ID, spellXSpellVisualId);
     SetUInt32Value(DYNAMICOBJECT_SPELLID, spell->Id);
     SetFloatValue(DYNAMICOBJECT_RADIUS, radius);
     SetUInt32Value(DYNAMICOBJECT_CASTTIME, getMSTime());
@@ -166,7 +168,6 @@ void DynamicObject::Remove()
 {
     if (IsInWorld())
     {
-        SendObjectDeSpawnAnim(GetGUID());
         RemoveFromWorld();
         AddObjectToRemoveList();
     }
@@ -240,4 +241,9 @@ void DynamicObject::UnbindFromCaster()
     ASSERT(_caster);
     _caster->_UnregisterDynObject(this);
     _caster = NULL;
+}
+
+SpellInfo const* DynamicObject::GetSpellInfo() const
+{
+    return sSpellMgr->GetSpellInfo(GetSpellId());
 }

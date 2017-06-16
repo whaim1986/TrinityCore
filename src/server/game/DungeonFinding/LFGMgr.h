@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,11 +18,13 @@
 #ifndef _LFGMGR_H
 #define _LFGMGR_H
 
-#include "Field.h"
+#include "Common.h"
+#include "DatabaseEnvFwd.h"
 #include "LFG.h"
 #include "LFGQueue.h"
 #include "LFGGroupData.h"
 #include "LFGPlayerData.h"
+#include <unordered_map>
 
 class Group;
 class Player;

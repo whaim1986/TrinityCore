@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,11 +16,65 @@
  */
 
 #include "CollectionMgr.h"
+#include "DatabaseEnv.h"
+#include "DB2Stores.h"
+#include "Item.h"
+#include "Log.h"
+#include "MiscPackets.h"
 #include "ObjectMgr.h"
 #include "Player.h"
+#include "Timer.h"
 #include "TransmogrificationPackets.h"
+#include "WorldSession.h"
+#include <boost/dynamic_bitset.hpp>
 
-CollectionMgr::CollectionMgr(WorldSession* owner) : _owner(owner), _appearances()
+namespace
+{
+    MountDefinitionMap FactionSpecificMounts;
+}
+
+void CollectionMgr::LoadMountDefinitions()
+{
+    uint32 oldMSTime = getMSTime();
+
+    QueryResult result = WorldDatabase.Query("SELECT spellId, otherFactionSpellId FROM mount_definitions");
+
+    if (!result)
+    {
+        TC_LOG_INFO("server.loading", ">> Loaded 0 mount definitions. DB table `mount_definitions` is empty.");
+        return;
+    }
+
+    do
+    {
+        Field* fields = result->Fetch();
+
+        uint32 spellId = fields[0].GetUInt32();
+        uint32 otherFactionSpellId = fields[1].GetUInt32();
+
+        if (!sDB2Manager.GetMount(spellId))
+        {
+            TC_LOG_ERROR("sql.sql", "Mount spell %u defined in `mount_definitions` does not exist in Mount.db2, skipped", spellId);
+            continue;
+        }
+
+        if (otherFactionSpellId && !sDB2Manager.GetMount(otherFactionSpellId))
+        {
+            TC_LOG_ERROR("sql.sql", "otherFactionSpellId %u defined in `mount_definitions` for spell %u does not exist in Mount.db2, skipped", otherFactionSpellId, spellId);
+            continue;
+        }
+
+        FactionSpecificMounts[spellId] = otherFactionSpellId;
+    } while (result->NextRow());
+
+    TC_LOG_INFO("server.loading", ">> Loaded " SZFMTD " mount definitions in %u ms", FactionSpecificMounts.size(), GetMSTimeDiffToNow(oldMSTime));
+}
+
+CollectionMgr::CollectionMgr(WorldSession* owner) : _owner(owner), _appearances(Trinity::make_unique<boost::dynamic_bitset<uint32>>())
+{
+}
+
+CollectionMgr::~CollectionMgr()
 {
 }
 
@@ -108,10 +162,12 @@ void CollectionMgr::LoadAccountHeirlooms(PreparedQueryResult result)
 
         uint32 bonusId = 0;
 
-        if (flags & HEIRLOOM_FLAG_BONUS_LEVEL_90)
-            bonusId = heirloom->ItemBonusListID[0];
-        if (flags & HEIRLOOM_FLAG_BONUS_LEVEL_100)
+        if (flags & HEIRLOOM_FLAG_BONUS_LEVEL_110)
+            bonusId = heirloom->ItemBonusListID[2];
+        else if (flags & HEIRLOOM_FLAG_BONUS_LEVEL_100)
             bonusId = heirloom->ItemBonusListID[1];
+        else if (flags & HEIRLOOM_FLAG_BONUS_LEVEL_90)
+            bonusId = heirloom->ItemBonusListID[0];
 
         _heirlooms[itemId] = HeirloomData(flags, bonusId);
     } while (result->NextRow());
@@ -189,13 +245,18 @@ void CollectionMgr::UpgradeHeirloom(uint32 itemId, uint32 castItem)
         flags |= HEIRLOOM_FLAG_BONUS_LEVEL_100;
         bonusId = heirloom->ItemBonusListID[1];
     }
+    if (heirloom->UpgradeItemID[2] == castItem)
+    {
+        flags |= HEIRLOOM_FLAG_BONUS_LEVEL_110;
+        bonusId = heirloom->ItemBonusListID[2];
+    }
 
     for (Item* item : player->GetItemListByEntry(itemId, true))
         item->AddBonuses(bonusId);
 
     // Get heirloom offset to update only one part of dynamic field
     std::vector<uint32> const& fields = player->GetDynamicValues(PLAYER_DYNAMIC_FIELD_HEIRLOOMS);
-    uint8 offset = std::find(fields.begin(), fields.end(), itemId) - fields.begin();
+    uint16 offset = uint16(std::find(fields.begin(), fields.end(), itemId) - fields.begin());
 
     player->SetDynamicValue(PLAYER_DYNAMIC_FIELD_HEIRLOOM_FLAGS, offset, flags);
     itr->second.flags = flags;
@@ -235,7 +296,7 @@ void CollectionMgr::CheckHeirloomUpgrades(Item* item)
         if (newItemId)
         {
             std::vector<uint32> const& fields = player->GetDynamicValues(PLAYER_DYNAMIC_FIELD_HEIRLOOMS);
-            uint8 offset = std::find(fields.begin(), fields.end(), itr->first) - fields.begin();
+            uint16 offset = uint16(std::find(fields.begin(), fields.end(), itr->first) - fields.begin());
 
             player->SetDynamicValue(PLAYER_DYNAMIC_FIELD_HEIRLOOMS, offset, newItemId);
             player->SetDynamicValue(PLAYER_DYNAMIC_FIELD_HEIRLOOM_FLAGS, offset, 0);
@@ -266,12 +327,115 @@ bool CollectionMgr::CanApplyHeirloomXpBonus(uint32 itemId, uint32 level)
     if (itr == _heirlooms.end())
         return false;
 
+    if (itr->second.flags & HEIRLOOM_FLAG_BONUS_LEVEL_110)
+        return level <= 110;
     if (itr->second.flags & HEIRLOOM_FLAG_BONUS_LEVEL_100)
         return level <= 100;
     if (itr->second.flags & HEIRLOOM_FLAG_BONUS_LEVEL_90)
         return level <= 90;
 
     return level <= 60;
+}
+
+void CollectionMgr::LoadMounts()
+{
+    for (auto const& m : _mounts)
+        AddMount(m.first, m.second, false, false);
+}
+
+void CollectionMgr::LoadAccountMounts(PreparedQueryResult result)
+{
+    if (!result)
+        return;
+
+    do
+    {
+        Field* fields = result->Fetch();
+        uint32 mountSpellId = fields[0].GetUInt32();
+        MountStatusFlags flags = MountStatusFlags(fields[1].GetUInt8());
+
+        if (!sDB2Manager.GetMount(mountSpellId))
+            continue;
+
+        _mounts[mountSpellId] = flags;
+    } while (result->NextRow());
+}
+
+void CollectionMgr::SaveAccountMounts(SQLTransaction& trans)
+{
+    for (auto const& mount : _mounts)
+    {
+        PreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_REP_ACCOUNT_MOUNTS);
+        stmt->setUInt32(0, _owner->GetBattlenetAccountId());
+        stmt->setUInt32(1, mount.first);
+        stmt->setUInt8(2, mount.second);
+        trans->Append(stmt);
+    }
+}
+
+bool CollectionMgr::AddMount(uint32 spellId, MountStatusFlags flags, bool factionMount /*= false*/, bool learned /*= false*/)
+{
+    Player* player = _owner->GetPlayer();
+    if (!player)
+        return false;
+
+    MountEntry const* mount = sDB2Manager.GetMount(spellId);
+    if (!mount)
+        return false;
+
+    MountDefinitionMap::const_iterator itr = FactionSpecificMounts.find(spellId);
+    if (itr != FactionSpecificMounts.end() && !factionMount)
+        AddMount(itr->second, flags, true, learned);
+
+    _mounts.insert(MountContainer::value_type(spellId, flags));
+
+    // Mount condition only applies to using it, should still learn it.
+    if (mount->PlayerConditionId)
+    {
+        PlayerConditionEntry const* playerCondition = sPlayerConditionStore.LookupEntry(mount->PlayerConditionId);
+        if (!ConditionMgr::IsPlayerMeetingCondition(player, playerCondition))
+            return false;
+    }
+
+    if (!learned)
+    {
+        if (!factionMount)
+            SendSingleMountUpdate(std::make_pair(spellId, flags));
+        if (!player->HasSpell(spellId))
+            player->LearnSpell(spellId, true);
+    }
+
+    return true;
+}
+
+void CollectionMgr::MountSetFavorite(uint32 spellId, bool favorite)
+{
+    auto itr = _mounts.find(spellId);
+    if (itr == _mounts.end())
+        return;
+
+    if (favorite)
+        itr->second = MountStatusFlags(itr->second | MOUNT_IS_FAVORITE);
+    else
+        itr->second = MountStatusFlags(itr->second & ~MOUNT_IS_FAVORITE);
+
+    SendSingleMountUpdate(*itr);
+}
+
+void CollectionMgr::SendSingleMountUpdate(std::pair<uint32, MountStatusFlags> mount)
+{
+    Player* player = _owner->GetPlayer();
+    if (!player)
+        return;
+
+    // Temporary container, just need to store only selected mount
+    MountContainer tempMounts;
+    tempMounts.insert(mount);
+
+    WorldPackets::Misc::AccountMountUpdate mountUpdate;
+    mountUpdate.IsFullUpdate = false;
+    mountUpdate.Mounts = &tempMounts;
+    player->SendDirectMessage(mountUpdate.Write());
 }
 
 struct DynamicBitsetBlockOutputIterator : public std::iterator<std::output_iterator_tag, void, void, void, void>
@@ -294,7 +458,7 @@ private:
 
 void CollectionMgr::LoadItemAppearances()
 {
-    boost::to_block_range(_appearances, DynamicBitsetBlockOutputIterator([this](uint32 blockValue)
+    boost::to_block_range(*_appearances, DynamicBitsetBlockOutputIterator([this](uint32 blockValue)
     {
         _owner->GetPlayer()->AddDynamicValue(PLAYER_DYNAMIC_FIELD_TRANSMOG, blockValue);
     }));
@@ -319,7 +483,7 @@ void CollectionMgr::LoadAccountItemAppearances(PreparedQueryResult knownAppearan
 
         } while (knownAppearances->NextRow());
 
-        _appearances.init_from_block_range(blocks.begin(), blocks.end());
+        _appearances->init_from_block_range(blocks.begin(), blocks.end());
     }
 
     if (favoriteAppearances)
@@ -331,27 +495,36 @@ void CollectionMgr::LoadAccountItemAppearances(PreparedQueryResult knownAppearan
     }
 
     // Static item appearances known by every player
-    static uint32 const hiddenAppearanceItems[3] = { 134110, 134111, 134112 };
+    static uint32 constexpr hiddenAppearanceItems[] =
+    {
+        134110, // Hidden Helm
+        134111, // Hidden Cloak
+        134112, // Hidden Shoulder
+        142503, // Hidden Shirt
+        142504, // Hidden Tabard
+        143539  // Hidden Belt
+    };
+
     for (uint32 hiddenItem : hiddenAppearanceItems)
     {
         ItemModifiedAppearanceEntry const* hiddenAppearance = sDB2Manager.GetItemModifiedAppearance(hiddenItem, 0);
         ASSERT(hiddenAppearance);
-        if (_appearances.size() <= hiddenAppearance->ID)
-            _appearances.resize(hiddenAppearance->ID + 1);
+        if (_appearances->size() <= hiddenAppearance->ID)
+            _appearances->resize(hiddenAppearance->ID + 1);
 
-        _appearances.set(hiddenAppearance->ID);
+        _appearances->set(hiddenAppearance->ID);
     }
 }
 
 void CollectionMgr::SaveAccountItemAppearances(SQLTransaction& trans)
 {
     uint16 blockIndex = 0;
-    boost::to_block_range(_appearances, DynamicBitsetBlockOutputIterator([this, &blockIndex, trans](uint32 blockValue)
+    boost::to_block_range(*_appearances, DynamicBitsetBlockOutputIterator([this, &blockIndex, trans](uint32 blockValue)
     {
         if (blockValue) // this table is only appended/bits are set (never cleared) so don't save empty blocks
         {
             PreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_INS_BNET_ITEM_APPEARANCES);
-            stmt->setUInt32(0, GetOwner()->GetBattlenetAccountId());
+            stmt->setUInt32(0, _owner->GetBattlenetAccountId());
             stmt->setUInt16(1, blockIndex);
             stmt->setUInt32(2, blockValue);
             trans->Append(stmt);
@@ -403,7 +576,6 @@ uint32 const PlayerClassByArmorSubclass[MAX_ITEM_SUBCLASS_ARMOR] =
     (1 << (CLASS_PALADIN - 1)) | (1 << (CLASS_DEATH_KNIGHT - 1)) | (1 << (CLASS_SHAMAN - 1)) | (1 << (CLASS_DRUID - 1)),    //ITEM_SUBCLASS_ARMOR_RELIC
 };
 
-
 void CollectionMgr::AddItemAppearance(Item* item)
 {
     if (!item->IsSoulBound())
@@ -449,7 +621,7 @@ bool CollectionMgr::CanAddAppearance(ItemModifiedAppearanceEntry const* itemModi
     if (_owner->GetPlayer()->CanUseItem(itemTemplate) != EQUIP_ERR_OK)
         return false;
 
-    if (itemTemplate->GetFlags2() & ITEM_FLAG2_CANNOT_TRANSMOG || itemTemplate->GetQuality() == ITEM_QUALITY_ARTIFACT)
+    if (itemTemplate->GetFlags2() & ITEM_FLAG2_NO_SOURCE_FOR_ITEM_VISUAL || itemTemplate->GetQuality() == ITEM_QUALITY_ARTIFACT)
         return false;
 
     switch (itemTemplate->GetClass())
@@ -502,10 +674,10 @@ bool CollectionMgr::CanAddAppearance(ItemModifiedAppearanceEntry const* itemModi
     }
 
     if (itemTemplate->GetQuality() < ITEM_QUALITY_UNCOMMON)
-        if (!(itemTemplate->GetFlags2() & ITEM_FLAG2_CAN_TRANSMOG) || !(itemTemplate->GetFlags3() & 0x200000))
+        if (!(itemTemplate->GetFlags2() & ITEM_FLAG2_IGNORE_QUALITY_FOR_ITEM_VISUAL_SOURCE) || !(itemTemplate->GetFlags3() & ITEM_FLAG3_ACTS_AS_TRANSMOG_HIDDEN_VISUAL_OPTION))
             return false;
 
-    if (itemModifiedAppearance->ID < _appearances.size() && _appearances.test(itemModifiedAppearance->ID))
+    if (itemModifiedAppearance->ID < _appearances->size() && _appearances->test(itemModifiedAppearance->ID))
         return false;
 
     return true;
@@ -513,16 +685,16 @@ bool CollectionMgr::CanAddAppearance(ItemModifiedAppearanceEntry const* itemModi
 
 void CollectionMgr::AddItemAppearance(ItemModifiedAppearanceEntry const* itemModifiedAppearance)
 {
-    if (_appearances.size() <= itemModifiedAppearance->ID)
+    if (_appearances->size() <= itemModifiedAppearance->ID)
     {
-        uint32 numBlocks = _appearances.num_blocks();
-        _appearances.resize(itemModifiedAppearance->ID + 1);
-        numBlocks = _appearances.num_blocks() - numBlocks;
+        std::size_t numBlocks = _appearances->num_blocks();
+        _appearances->resize(itemModifiedAppearance->ID + 1);
+        numBlocks = _appearances->num_blocks() - numBlocks;
         while (numBlocks--)
             _owner->GetPlayer()->AddDynamicValue(PLAYER_DYNAMIC_FIELD_TRANSMOG, 0);
     }
 
-    _appearances.set(itemModifiedAppearance->ID);
+    _appearances->set(itemModifiedAppearance->ID);
     uint32 blockIndex = itemModifiedAppearance->ID / 32;
     uint32 bitIndex = itemModifiedAppearance->ID % 32;
     uint32 currentMask = _owner->GetPlayer()->GetDynamicValue(PLAYER_DYNAMIC_FIELD_TRANSMOG, blockIndex);
@@ -564,7 +736,7 @@ void CollectionMgr::RemoveTemporaryAppearance(Item* item)
 
 std::pair<bool, bool> CollectionMgr::HasItemAppearance(uint32 itemModifiedAppearanceId) const
 {
-    if (itemModifiedAppearanceId < _appearances.size() && _appearances.test(itemModifiedAppearanceId))
+    if (itemModifiedAppearanceId < _appearances->size() && _appearances->test(itemModifiedAppearanceId))
         return{ true, false };
 
     if (_temporaryAppearances.find(itemModifiedAppearanceId) != _temporaryAppearances.end())
@@ -619,7 +791,7 @@ void CollectionMgr::SendFavoriteAppearances() const
     transmogCollectionUpdate.FavoriteAppearances.reserve(_favoriteAppearances.size());
     for (auto itr = _favoriteAppearances.begin(); itr != _favoriteAppearances.end(); ++itr)
         if (itr->second != FavoriteAppearanceState::Removed)
-        transmogCollectionUpdate.FavoriteAppearances.push_back(itr->first);
+            transmogCollectionUpdate.FavoriteAppearances.push_back(itr->first);
 
     _owner->SendPacket(transmogCollectionUpdate.Write());
 }

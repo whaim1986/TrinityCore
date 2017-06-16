@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,15 +18,17 @@
 #ifndef FIRELANDS_H_
 #define FIRELANDS_H_
 
-#include "Map.h"
-#include "CreatureAI.h"
+#include "CreatureAIImpl.h"
+#include "EventProcessor.h"
+
+class Creature;
 
 #define DataHeader "FL"
 #define FirelandsScriptName "instance_firelands"
 
 uint32 const EncounterCount = 7;
 
-enum DataTypes
+enum FLDataTypes
 {
     DATA_BETH_TILAC         = 0,
     DATA_LORD_RHYOLITH      = 1,
@@ -37,7 +39,7 @@ enum DataTypes
     DATA_RAGNAROS           = 6,
 };
 
-enum CreatureIds
+enum FLCreatureIds
 {
     NPC_BLAZING_MONSTROSITY_LEFT    = 53786,
     NPC_BLAZING_MONSTROSITY_RIGHT   = 53791,
@@ -52,24 +54,16 @@ class DelayedAttackStartEvent : public BasicEvent
     public:
         DelayedAttackStartEvent(Creature* owner) : _owner(owner) { }
 
-        bool Execute(uint64 /*e_time*/, uint32 /*p_time*/) override
-        {
-            _owner->AI()->DoZoneInCombat(_owner, 200.0f);
-            return true;
-        }
+        bool Execute(uint64 /*e_time*/, uint32 /*p_time*/) override;
 
     private:
         Creature* _owner;
 };
 
-template<class AI>
-CreatureAI* GetFirelandsAI(Creature* creature)
+template<typename AI>
+inline AI* GetFirelandsAI(Creature* creature)
 {
-    if (InstanceMap* instance = creature->GetMap()->ToInstanceMap())
-        if (instance->GetInstanceScript())
-            if (instance->GetScriptId() == sObjectMgr->GetScriptId(FirelandsScriptName))
-                return new AI(creature);
-    return NULL;
+    return GetInstanceAI<AI>(creature, FirelandsScriptName);
 }
 
 #endif // FIRELANDS_H_

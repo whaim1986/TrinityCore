@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -18,13 +18,21 @@
 
 #include "AchievementMgr.h"
 #include "AchievementPackets.h"
+#include "DB2Stores.h"
 #include "CellImpl.h"
 #include "ChatTextBuilder.h"
+#include "DatabaseEnv.h"
 #include "GridNotifiersImpl.h"
 #include "Group.h"
+#include "Guild.h"
 #include "GuildMgr.h"
+#include "Item.h"
 #include "Language.h"
+#include "Log.h"
+#include "Mail.h"
 #include "ObjectMgr.h"
+#include "World.h"
+#include "WorldSession.h"
 
 struct VisibleAchievementCheck
 {
@@ -63,25 +71,29 @@ uint32 AchievementMgr::GetAchievementPoints() const
 
 bool AchievementMgr::CanUpdateCriteriaTree(Criteria const* criteria, CriteriaTree const* tree, Player* referencePlayer) const
 {
-    if (HasAchieved(tree->Achievement->ID))
+    AchievementEntry const* achievement = tree->Achievement;
+    if (!achievement)
+        return false;
+
+    if (HasAchieved(achievement->ID))
     {
         TC_LOG_TRACE("criteria.achievement", "AchievementMgr::CanUpdateCriteriaTree: (Id: %u Type %s Achievement %u) Achievement already earned",
-            criteria->ID, CriteriaMgr::GetCriteriaTypeString(criteria->Entry->Type), tree->Achievement->ID);
+            criteria->ID, CriteriaMgr::GetCriteriaTypeString(criteria->Entry->Type), achievement->ID);
         return false;
     }
 
-    if (tree->Achievement->MapID != -1 && referencePlayer->GetMapId() != uint32(tree->Achievement->MapID))
+    if (achievement->MapID != -1 && referencePlayer->GetMapId() != uint32(achievement->MapID))
     {
         TC_LOG_TRACE("criteria.achievement", "AchievementMgr::CanUpdateCriteriaTree: (Id: %u Type %s Achievement %u) Wrong map",
-            criteria->ID, CriteriaMgr::GetCriteriaTypeString(criteria->Entry->Type), tree->Achievement->ID);
+            criteria->ID, CriteriaMgr::GetCriteriaTypeString(criteria->Entry->Type), achievement->ID);
         return false;
     }
 
-    if ((tree->Achievement->Faction == ACHIEVEMENT_FACTION_HORDE    && referencePlayer->GetTeam() != HORDE) ||
-        (tree->Achievement->Faction == ACHIEVEMENT_FACTION_ALLIANCE && referencePlayer->GetTeam() != ALLIANCE))
+    if ((achievement->Faction == ACHIEVEMENT_FACTION_HORDE    && referencePlayer->GetTeam() != HORDE) ||
+        (achievement->Faction == ACHIEVEMENT_FACTION_ALLIANCE && referencePlayer->GetTeam() != ALLIANCE))
     {
         TC_LOG_TRACE("criteria.achievement", "AchievementMgr::CanUpdateCriteriaTree: (Id: %u Type %s Achievement %u) Wrong faction",
-            criteria->ID, CriteriaMgr::GetCriteriaTypeString(criteria->Entry->Type), tree->Achievement->ID);
+            criteria->ID, CriteriaMgr::GetCriteriaTypeString(criteria->Entry->Type), achievement->ID);
         return false;
     }
 
@@ -110,27 +122,35 @@ bool AchievementMgr::CanCompleteCriteriaTree(CriteriaTree const* tree)
 
 void AchievementMgr::CompletedCriteriaTree(CriteriaTree const* tree, Player* referencePlayer)
 {
+    AchievementEntry const* achievement = tree->Achievement;
+    if (!achievement)
+        return;
+
     // counter can never complete
-    if (tree->Achievement->Flags & ACHIEVEMENT_FLAG_COUNTER)
+    if (achievement->Flags & ACHIEVEMENT_FLAG_COUNTER)
         return;
 
     // already completed and stored
-    if (HasAchieved(tree->Achievement->ID))
+    if (HasAchieved(achievement->ID))
         return;
 
-    if (IsCompletedAchievement(tree->Achievement))
-        CompletedAchievement(tree->Achievement, referencePlayer);
+    if (IsCompletedAchievement(achievement))
+        CompletedAchievement(achievement, referencePlayer);
 }
 
 void AchievementMgr::AfterCriteriaTreeUpdate(CriteriaTree const* tree, Player* referencePlayer)
 {
+    AchievementEntry const* achievement = tree->Achievement;
+    if (!achievement)
+        return;
+
     // check again the completeness for SUMM and REQ COUNT achievements,
     // as they don't depend on the completed criteria but on the sum of the progress of each individual criteria
-    if (tree->Achievement->Flags & ACHIEVEMENT_FLAG_SUMM)
-        if (IsCompletedAchievement(tree->Achievement))
-            CompletedAchievement(tree->Achievement, referencePlayer);
+    if (achievement->Flags & ACHIEVEMENT_FLAG_SUMM)
+        if (IsCompletedAchievement(achievement))
+            CompletedAchievement(achievement, referencePlayer);
 
-    if (std::vector<AchievementEntry const*> const* achRefList = sAchievementMgr->GetAchievementByReferencedId(tree->Achievement->ID))
+    if (std::vector<AchievementEntry const*> const* achRefList = sAchievementMgr->GetAchievementByReferencedId(achievement->ID))
         for (AchievementEntry const* refAchievement : *achRefList)
             if (IsCompletedAchievement(refAchievement))
                 CompletedAchievement(refAchievement, referencePlayer);
@@ -431,13 +451,17 @@ void PlayerAchievementMgr::SendAchievementInfo(Player* receiver, uint32 /*achiev
         inspectedAchievements.Data.Progress.push_back(progress);
     }
 
-    receiver->GetSession()->SendPacket(inspectedAchievements.Write());
+    receiver->SendDirectMessage(inspectedAchievements.Write());
 }
 
 void PlayerAchievementMgr::CompletedAchievement(AchievementEntry const* achievement, Player* referencePlayer)
 {
     // disable for gamemasters with GM-mode enabled
     if (_owner->IsGameMaster())
+        return;
+
+    if ((achievement->Faction == ACHIEVEMENT_FACTION_HORDE    && referencePlayer->GetTeam() != HORDE) ||
+        (achievement->Faction == ACHIEVEMENT_FACTION_ALLIANCE && referencePlayer->GetTeam() != ALLIANCE))
         return;
 
     if (achievement->Flags & ACHIEVEMENT_FLAG_COUNTER || HasAchieved(achievement->ID))
@@ -450,7 +474,7 @@ void PlayerAchievementMgr::CompletedAchievement(AchievementEntry const* achievem
     if (!_owner->GetSession()->PlayerLoading())
         SendAchievementEarned(achievement);
 
-    TC_LOG_DEBUG("criteria.achievement", "PlayerAchievementMgr::CompletedAchievement(%u). %s", achievement->ID, GetOwnerInfo().c_str());
+    TC_LOG_INFO("criteria.achievement", "PlayerAchievementMgr::CompletedAchievement(%u). %s", achievement->ID, GetOwnerInfo().c_str());
 
     CompletedAchievementData& ca = _completedAchievements[achievement->ID];
     ca.Date = time(NULL);
@@ -493,7 +517,7 @@ void PlayerAchievementMgr::CompletedAchievement(AchievementEntry const* achievem
             std::string text = reward->Body;
 
             LocaleConstant localeConstant = _owner->GetSession()->GetSessionDbLocaleIndex();
-            if (localeConstant >= LOCALE_enUS)
+            if (localeConstant != LOCALE_enUS)
             {
                 if (AchievementRewardLocale const* loc = sAchievementMgr->GetAchievementRewardLocale(achievement))
                 {
@@ -583,8 +607,8 @@ void PlayerAchievementMgr::SendAchievementEarned(AchievementEntry const* achieve
         {
             Trinity::BroadcastTextBuilder _builder(_owner, CHAT_MSG_ACHIEVEMENT, BROADCAST_TEXT_ACHIEVEMENT_EARNED, _owner, achievement->ID);
             Trinity::LocalizedPacketDo<Trinity::BroadcastTextBuilder> _localizer(_builder);
-            Trinity::PlayerDistWorker<Trinity::LocalizedPacketDo<Trinity::BroadcastTextBuilder> > _worker(_owner, sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_SAY), _localizer);
-            _owner->VisitNearbyWorldObject(sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_SAY), _worker);
+            Trinity::PlayerDistWorker<Trinity::LocalizedPacketDo<Trinity::BroadcastTextBuilder>> _worker(_owner, sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_SAY), _localizer);
+            Cell::VisitWorldObjects(_owner, _worker, sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_SAY));
         }
     }
 
@@ -774,7 +798,7 @@ void GuildAchievementMgr::SendAllData(Player const* receiver) const
         allGuildAchievements.Earned.push_back(earned);
     }
 
-    receiver->GetSession()->SendPacket(allGuildAchievements.Write());
+    receiver->SendDirectMessage(allGuildAchievements.Write());
 }
 
 void GuildAchievementMgr::SendAchievementInfo(Player* receiver, uint32 achievementId /*= 0*/) const
@@ -807,7 +831,7 @@ void GuildAchievementMgr::SendAchievementInfo(Player* receiver, uint32 achieveme
         }
     }
 
-    receiver->GetSession()->SendPacket(guildCriteriaUpdate.Write());
+    receiver->SendDirectMessage(guildCriteriaUpdate.Write());
 }
 
 void GuildAchievementMgr::SendAllTrackedCriterias(Player* receiver, std::set<uint32> const& trackedCriterias) const
@@ -833,7 +857,23 @@ void GuildAchievementMgr::SendAllTrackedCriterias(Player* receiver, std::set<uin
         guildCriteriaUpdate.Progress.push_back(guildCriteriaProgress);
     }
 
-    receiver->GetSession()->SendPacket(guildCriteriaUpdate.Write());
+    receiver->SendDirectMessage(guildCriteriaUpdate.Write());
+}
+
+void GuildAchievementMgr::SendAchievementMembers(Player* receiver, uint32 achievementId) const
+{
+    auto itr = _completedAchievements.find(achievementId);
+    if (itr != _completedAchievements.end())
+    {
+        WorldPackets::Achievement::GuildAchievementMembers guildAchievementMembers;
+        guildAchievementMembers.GuildGUID = _owner->GetGUID();
+        guildAchievementMembers.AchievementID = achievementId;
+        guildAchievementMembers.Member.reserve(itr->second.CompletingPlayers.size());
+        for (ObjectGuid const& member : itr->second.CompletingPlayers)
+            guildAchievementMembers.Member.emplace_back(member);
+
+        receiver->SendDirectMessage(guildAchievementMembers.Write());
+    }
 }
 
 void GuildAchievementMgr::CompletedAchievement(AchievementEntry const* achievement, Player* referencePlayer)

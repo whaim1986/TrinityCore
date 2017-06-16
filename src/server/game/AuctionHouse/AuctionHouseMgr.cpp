@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -16,19 +16,24 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "AuctionHouseMgr.h"
+#include "AuctionHousePackets.h"
+#include "AccountMgr.h"
+#include "Bag.h"
+#include "DB2Stores.h"
 #include "Common.h"
+#include "DatabaseEnv.h"
+#include "Language.h"
+#include "Log.h"
+#include "Mail.h"
+#include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "Player.h"
+#include "Realm.h"
+#include "ScriptMgr.h"
 #include "World.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
-#include "DatabaseEnv.h"
-#include "ScriptMgr.h"
-#include "AccountMgr.h"
-#include "AuctionHouseMgr.h"
-#include "Item.h"
-#include "Language.h"
-#include "Log.h"
 #include <vector>
 
 enum eAuctionHouse
@@ -850,7 +855,7 @@ void AuctionEntry::BuildAuctionInfo(std::vector<WorldPackets::AuctionHouse::Auct
     {
         if (gemData.ItemId)
         {
-            WorldPackets::Item::ItemGemInstanceData gem;
+            WorldPackets::Item::ItemGemData gem;
             gem.Slot = i;
             gem.Item.Initialize(&gemData);
             auctionItem.Gems.push_back(gem);

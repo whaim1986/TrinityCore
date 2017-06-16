@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -16,21 +16,24 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Common.h"
-#include "Player.h"
-#include "GridNotifiers.h"
-#include "Log.h"
-#include "GridStates.h"
-#include "Map.h"
-#include "MapManager.h"
-#include "MapInstanced.h"
 #include "InstanceSaveMgr.h"
-#include "Timer.h"
+#include "Common.h"
 #include "Config.h"
-#include "ObjectMgr.h"
-#include "World.h"
+#include "DatabaseEnv.h"
+#include "DB2Stores.h"
+#include "GridNotifiers.h"
+#include "GridStates.h"
 #include "Group.h"
+#include "InstanceScenario.h"
 #include "InstanceScript.h"
+#include "Log.h"
+#include "Map.h"
+#include "MapInstanced.h"
+#include "MapManager.h"
+#include "ObjectMgr.h"
+#include "Player.h"
+#include "Timer.h"
+#include "World.h"
 
 uint16 InstanceSaveManager::ResetTimeDelay[] = {3600, 900, 300, 60};
 
@@ -148,6 +151,10 @@ void InstanceSaveManager::DeleteInstanceFromDB(uint32 instanceid)
     stmt->setUInt32(0, instanceid);
     trans->Append(stmt);
 
+    stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_SCENARIO_INSTANCE_CRITERIA_FOR_INSTANCE);
+    stmt->setUInt32(0, instanceid);
+    trans->Append(stmt);
+
     CharacterDatabase.CommitTransaction(trans);
     // Respawn times should be deleted only when the map gets unloaded
 }
@@ -208,6 +215,9 @@ void InstanceSave::SaveToDB()
             completedEncounters = instanceScript->GetCompletedEncounterMask();
             m_entranceId = instanceScript->GetEntranceLocation();
         }
+
+        if (InstanceScenario* scenario = map->ToInstanceMap()->GetInstanceScenario())
+            scenario->SaveToDB();
     }
 
     PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_INSTANCE_SAVE);
@@ -468,6 +478,13 @@ time_t InstanceSaveManager::GetSubsequentResetTime(uint32 mapid, Difficulty diff
         period = DAY;
 
     return ((resetTime + MINUTE) / DAY * DAY) + period + diff;
+}
+
+void InstanceSaveManager::SetResetTimeFor(uint32 mapid, Difficulty d, time_t t)
+{
+    ResetTimeByMapDifficultyMap::iterator itr = m_resetTimeByMapDifficulty.find(MAKE_PAIR64(mapid, d));
+    ASSERT(itr != m_resetTimeByMapDifficulty.end());
+    itr->second = t;
 }
 
 void InstanceSaveManager::ScheduleReset(bool add, time_t time, InstResetEvent event)

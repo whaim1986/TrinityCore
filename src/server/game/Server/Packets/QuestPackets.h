@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,9 +19,9 @@
 #define QuestPackets_h__
 
 #include "Packet.h"
+#include "ItemPacketsCommon.h"
 #include "QuestDef.h"
 #include "ObjectGuid.h"
-#include "ItemPackets.h"
 
 namespace WorldPackets
 {
@@ -157,6 +157,7 @@ namespace WorldPackets
             int32 AreaGroupID               = 0;
             int32 TimeAllowed               = 0;
             int32 QuestRewardID             = 0;
+            int32 Expansion                 = 0;
             std::vector<QuestObjective> Objectives;
             int32 RewardItems[QUEST_REWARD_ITEM_COUNT] = {};
             int32 RewardAmount[QUEST_REWARD_ITEM_COUNT] = {};
@@ -186,7 +187,7 @@ namespace WorldPackets
         class QuestUpdateAddCredit final : public ServerPacket
         {
         public:
-            QuestUpdateAddCredit() : ServerPacket(SMSG_QUEST_UPDATE_ADD_CREDIT, 16+4+4+2+2+1) { }
+            QuestUpdateAddCredit() : ServerPacket(SMSG_QUEST_UPDATE_ADD_CREDIT, 16 + 4 + 4 + 2 + 2 + 1) { }
 
             WorldPacket const* Write() override;
 
@@ -195,6 +196,18 @@ namespace WorldPackets
             int32 QuestID       = 0;
             uint16 Count        = 0;
             uint16 Required     = 0;
+            uint8 ObjectiveType = 0;
+        };
+
+        class QuestUpdateAddCreditSimple final : public ServerPacket
+        {
+        public:
+            QuestUpdateAddCreditSimple() : ServerPacket(SMSG_QUEST_UPDATE_ADD_CREDIT_SIMPLE, 4 + 4 + 1) { }
+
+            WorldPacket const* Write() override;
+
+            int32 QuestID = 0;
+            int32 ObjectID = 0;
             uint8 ObjectiveType = 0;
         };
 
@@ -362,8 +375,6 @@ namespace WorldPackets
             bool DisplayPopup = false;
             bool StartCheat = false;
             bool AutoLaunched = false;
-            bool CanIgnoreQuest = false;
-            bool IsQuestIgnored = false;
         };
 
         struct QuestObjectiveCollect
@@ -402,8 +413,6 @@ namespace WorldPackets
             uint32 QuestFlags[2]        = {};
             std::string QuestTitle;
             std::string CompletionText;
-            bool CanIgnoreQuest         = false;
-            bool IsQuestIgnored         = false;
         };
 
         class QuestGiverRequestReward final : public ClientPacket
@@ -453,15 +462,14 @@ namespace WorldPackets
 
         struct GossipTextData
         {
-            GossipTextData(uint32 questID, uint32 questType, uint32 questLevel, uint32 questFlags, uint32 questFlagsEx, bool repeatable, bool ignored, std::string questTitle) :
-                QuestID(questID), QuestType(questType), QuestLevel(questLevel), QuestFlags(questFlags), QuestFlagsEx(questFlagsEx), Repeatable(repeatable), IsQuestIgnored(ignored), QuestTitle(questTitle) { }
+            GossipTextData(uint32 questID, uint32 questType, uint32 questLevel, uint32 questFlags, uint32 questFlagsEx, bool repeatable, std::string questTitle) :
+                QuestID(questID), QuestType(questType), QuestLevel(questLevel), QuestFlags(questFlags), QuestFlagsEx(questFlagsEx), Repeatable(repeatable), QuestTitle(questTitle) { }
             uint32 QuestID;
             uint32 QuestType;
             uint32 QuestLevel;
             uint32 QuestFlags;
             uint32 QuestFlagsEx;
             bool Repeatable;
-            bool IsQuestIgnored;
             std::string QuestTitle;
         };
 
@@ -550,6 +558,7 @@ namespace WorldPackets
             WorldPacket const* Write() override;
 
             uint32 Reason = 0;
+            int32 ContributionRewardID = 0;
             bool SendErrorMessage = false;
             std::string ReasonText;
         };
@@ -593,6 +602,36 @@ namespace WorldPackets
             WorldPacket const* Write() override;
 
             int32 Count = 0;
+        };
+
+        class RequestWorldQuestUpdate final : public ClientPacket
+        {
+        public:
+            RequestWorldQuestUpdate(WorldPacket&& packet) : ClientPacket(CMSG_REQUEST_WORLD_QUEST_UPDATE, std::move(packet)) { }
+
+            void Read() override { }
+        };
+
+        struct WorldQuestUpdateInfo
+        {
+            WorldQuestUpdateInfo(int32 lastUpdate, uint32 questID, uint32 timer, int32 variableID, int32 value) :
+                LastUpdate(lastUpdate), QuestID(questID), Timer(timer), VariableID(variableID), Value(value) { }
+            int32 LastUpdate;
+            uint32 QuestID;
+            uint32 Timer;
+            // WorldState
+            int32 VariableID;
+            int32 Value;
+        };
+
+        class WorldQuestUpdate final : public ServerPacket
+        {
+        public:
+            WorldQuestUpdate() : ServerPacket(SMSG_WORLD_QUEST_UPDATE, 100) { }
+
+            WorldPacket const* Write() override;
+
+            std::vector<WorldQuestUpdateInfo> WorldQuestUpdates;
         };
     }
 }
